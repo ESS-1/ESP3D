@@ -36,9 +36,9 @@
 String COMMAND::buffer_serial;
 String COMMAND::buffer_tcp;
 
-/*TODO:WF3D*/#define ERROR_CMD_MSG (output == WEB_PIPE)?F("Error: Wrong Command"):F("M117 Cmd Error")
-/*TODO:WF3D*/#define INCORRECT_CMD_MSG (output == WEB_PIPE)?F("Error: Incorrect Command"):F("M117 Incorrect Cmd")
-/*TODO:WF3D*/#define OK_CMD_MSG (output == WEB_PIPE)?F("ok"):F("M117 Cmd Ok")
+#define ERROR_CMD_MSG (output == WEB_PIPE)?F("Error: Wrong Command"):F("Cmd Error")
+#define INCORRECT_CMD_MSG (output == WEB_PIPE)?F("Error: Incorrect Command"):F("Incorrect Cmd")
+#define OK_CMD_MSG (output == WEB_PIPE)?F("ok"):F("Cmd Ok")
 
 String COMMAND::get_param(String & cmd_params, const char * id, bool withspace)
 {
@@ -157,18 +157,18 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
     case 100:
         parameter = get_param(cmd_params,"", true);
         if (!CONFIG::isSSIDValid(parameter.c_str())) {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
         }
 #ifdef AUTHENTICATION_FEATURE
         if (auth_type != LEVEL_ADMIN) {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
         } else
 #endif
             if(!CONFIG::write_string(EP_STA_SSID,parameter.c_str())) {
-                BRIDGE::println(ERROR_CMD_MSG, output);
+                BRIDGE::printStatus(ERROR_CMD_MSG, output);
                 response = false;
             } else {
-                BRIDGE::println(OK_CMD_MSG, output);
+                BRIDGE::printStatus(OK_CMD_MSG, output);
             }
         break;
     //STA Password
@@ -176,20 +176,20 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
     case 101:
         parameter = get_param(cmd_params,"", true);
         if (!CONFIG::isPasswordValid(parameter.c_str())) {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         }
 #ifdef AUTHENTICATION_FEATURE
         if (auth_type != LEVEL_ADMIN) {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         } else
 #endif
             if(!CONFIG::write_string(EP_STA_PASSWORD,parameter.c_str())) {
-                BRIDGE::println(ERROR_CMD_MSG, output);
+                BRIDGE::printStatus(ERROR_CMD_MSG, output);
                 response = false;
             } else {
-                BRIDGE::println(OK_CMD_MSG, output);
+                BRIDGE::printStatus(OK_CMD_MSG, output);
             }
         break;
     //Hostname
@@ -197,20 +197,20 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
     case 102:
         parameter = get_param(cmd_params,"", true);
         if (!CONFIG::isHostnameValid(parameter.c_str())) {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         }
 #ifdef AUTHENTICATION_FEATURE
         if (auth_type != LEVEL_ADMIN) {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         } else
 #endif
             if(!CONFIG::write_string(EP_HOSTNAME,parameter.c_str())) {
-                BRIDGE::println(ERROR_CMD_MSG, output);
+                BRIDGE::printStatus(ERROR_CMD_MSG, output);
                 response = false;
             } else {
-                BRIDGE::println(OK_CMD_MSG, output);
+                BRIDGE::printStatus(OK_CMD_MSG, output);
             }
         break;
     //Wifi mode (STA/AP)
@@ -222,21 +222,21 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
         } else if (parameter == "AP") {
             mode = AP_MODE;
         } else {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         }
         if ((mode == CLIENT_MODE) || (mode == AP_MODE)) {
 #ifdef AUTHENTICATION_FEATURE
             if (auth_type != LEVEL_ADMIN) {
-                BRIDGE::println(INCORRECT_CMD_MSG, output);
+                BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
                 response = false;
             } else
 #endif
                 if(!CONFIG::write_byte(EP_WIFI_MODE,mode)) {
-                    BRIDGE::println(ERROR_CMD_MSG, output);
+                    BRIDGE::printStatus(ERROR_CMD_MSG, output);
                     response = false;
                 } else {
-                    BRIDGE::println(OK_CMD_MSG, output);
+                    BRIDGE::printStatus(OK_CMD_MSG, output);
                 }
         }
         break;
@@ -249,21 +249,21 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
         } else if (parameter == "DHCP") {
             mode = DHCP_MODE;
         } else {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         }
         if ((mode == STATIC_IP_MODE) || (mode == DHCP_MODE)) {
 #ifdef AUTHENTICATION_FEATURE
             if (auth_type != LEVEL_ADMIN) {
-                BRIDGE::println(INCORRECT_CMD_MSG, output);
+                BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
                 response = false;
             } else
 #endif
                 if(!CONFIG::write_byte(EP_STA_IP_MODE,mode)) {
-                    BRIDGE::println(ERROR_CMD_MSG, output);
+                    BRIDGE::printStatus(ERROR_CMD_MSG, output);
                     response = false;
                 } else {
-                    BRIDGE::println(OK_CMD_MSG, output);
+                    BRIDGE::printStatus(OK_CMD_MSG, output);
                 }
         }
         break;
@@ -272,20 +272,20 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
     case 105:
         parameter = get_param(cmd_params,"", true);
         if (!CONFIG::isSSIDValid(parameter.c_str())) {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         }
 #ifdef AUTHENTICATION_FEATURE
         if (auth_type != LEVEL_ADMIN) {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         } else
 #endif
             if(!CONFIG::write_string(EP_AP_SSID,parameter.c_str())) {
-                BRIDGE::println(ERROR_CMD_MSG, output);
+                BRIDGE::printStatus(ERROR_CMD_MSG, output);
                 response = false;
             } else {
-                BRIDGE::println(OK_CMD_MSG, output);
+                BRIDGE::printStatus(OK_CMD_MSG, output);
             }
         break;
     //AP Password
@@ -293,20 +293,20 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
     case 106:
         parameter = get_param(cmd_params,"", true);
         if (!CONFIG::isPasswordValid(parameter.c_str())) {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         }
 #ifdef AUTHENTICATION_FEATURE
         if (auth_type != LEVEL_ADMIN) {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         } else
 #endif
             if(!CONFIG::write_string(EP_AP_PASSWORD,parameter.c_str())) {
-                BRIDGE::println(ERROR_CMD_MSG, output);
+                BRIDGE::printStatus(ERROR_CMD_MSG, output);
                 response = false;
             } else {
-                BRIDGE::println(OK_CMD_MSG, output);
+                BRIDGE::printStatus(OK_CMD_MSG, output);
             }
         break;
     //AP IP mode (DHCP/STATIC)
@@ -318,21 +318,21 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
         } else if (parameter == "DHCP") {
             mode = DHCP_MODE;
         } else {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         }
         if ((mode == STATIC_IP_MODE) || (mode == DHCP_MODE)) {
 #ifdef AUTHENTICATION_FEATURE
             if (auth_type != LEVEL_ADMIN) {
-                BRIDGE::println(INCORRECT_CMD_MSG, output);
+                BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
                 response = false;
             } else
 #endif
                 if(!CONFIG::write_byte(EP_AP_IP_MODE,mode)) {
-                    BRIDGE::println(ERROR_CMD_MSG, output);
+                    BRIDGE::printStatus(ERROR_CMD_MSG, output);
                     response = false;
                 } else {
-                    BRIDGE::println(OK_CMD_MSG, output);
+                    BRIDGE::printStatus(OK_CMD_MSG, output);
                 }
         }
         break;
@@ -347,32 +347,32 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
         } else if (parameter == "restart") {
             mode = 2;
         } else {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         }
         if (response) {
             #ifdef AUTHENTICATION_FEATURE
             if (auth_type != LEVEL_ADMIN) {
-                BRIDGE::println(INCORRECT_CMD_MSG, output);
+                BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
                 response = false;
             } else
             #endif
             if (mode == 0) {
                  if (WiFi.getMode() !=WIFI_OFF) {
                      //disable wifi
-                     Board::status.print("Disabling Wifi");
+                     Board::status.print(F("Disabling Wifi"));
 /*TODO:WF3D_EEPROM*/                     WiFi.mode(WIFI_OFF);
                      wifi_config.Disable_servers();
                      return response;
-/*TODO:WF3D*/                 } else BRIDGE::println("M117 Wifi already off", output);
+                 } else BRIDGE::printStatus(F("Wifi already off"), output);
             }
             else if (mode == 1) { //restart device is the best way to start everything clean
                  if (WiFi.getMode() == WIFI_OFF) {
-                      Board::status.print("Enabling Wifi");
+                      Board::status.print(F("Enabling Wifi"));
                       CONFIG::esp_restart();
-/*TODO:WF3D*/                 } else BRIDGE::println("M117 Wifi already on", output);
+                 } else BRIDGE::printStatus(F("Wifi already on"), output);
             } else  { //restart wifi and restart is the best way to start everything clean
-                 Board::status.print("Enabling Wifi");
+                 Board::status.print(F("Enabling Wifi"));
                  CONFIG::esp_restart();
             }
         }
@@ -414,7 +414,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
         parameter = get_param(cmd_params,"", true);
 #ifdef AUTHENTICATION_FEATURE
         if (auth_type == LEVEL_GUEST) {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         } else
 #endif
@@ -425,7 +425,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             LOG(parameter)
             LOG("\r\n")
             if (parameter == "") {
-                BRIDGE::println(INCORRECT_CMD_MSG, output);
+                BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
                 response = false;
             } else {
                 int pin = parameter.toInt();
@@ -473,14 +473,14 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
                             LOG(String((value == 0)?LOW:HIGH))
                             LOG("\r\n")
                             digitalWrite(pin, (value == 0)?LOW:HIGH);
-                            BRIDGE::println(OK_CMD_MSG, output);
+                            BRIDGE::printStatus(OK_CMD_MSG, output);
                         } else {
-                            BRIDGE::println(INCORRECT_CMD_MSG, output);
+                            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
                             response = false;
                         }
                     }
                 } else {
-                    BRIDGE::println(INCORRECT_CMD_MSG, output);
+                    BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
                     response = false;
                 }
             }
@@ -494,16 +494,16 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
         parameter = get_param(cmd_params,"", true);
 #ifdef AUTHENTICATION_FEATURE
         if (auth_type == LEVEL_GUEST) {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         } else
 #endif
         {
             if(!CONFIG::write_string(EP_DATA_STRING,parameter.c_str())) {
-                BRIDGE::println(ERROR_CMD_MSG, output);
+                BRIDGE::printStatus(ERROR_CMD_MSG, output);
                 response = false;
             } else {
-                BRIDGE::println(OK_CMD_MSG, output);
+                BRIDGE::printStatus(OK_CMD_MSG, output);
             }
         }
         break;
@@ -513,7 +513,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
         parameter = get_param(cmd_params,"", true);
 #ifdef AUTHENTICATION_FEATURE
         if (auth_type == LEVEL_GUEST) {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         } else
 #endif
@@ -544,7 +544,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_BAUD_RATE), output);
             BRIDGE::print(F("\",\"T\":\"I\",\"V\":\""), output);
             if (!CONFIG::read_buffer(EP_BAUD_RATE,  (byte *)&ibuf, INTEGER_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(ibuf), output);
             }
@@ -556,7 +556,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_SLEEP_MODE), output);
             BRIDGE::print(F("\",\"T\":\"B\",\"V\":\""), output);
             if (!CONFIG::read_byte(EP_SLEEP_MODE, &bbuf )) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(bbuf), output);
             }
@@ -576,7 +576,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_WEB_PORT), output);
             BRIDGE::print(F("\",\"T\":\"I\",\"V\":\""), output);
             if (!CONFIG::read_buffer(EP_WEB_PORT,  (byte *)&ibuf, INTEGER_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(ibuf), output);
             }
@@ -592,7 +592,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_DATA_PORT), output);
             BRIDGE::print(F("\",\"T\":\"I\",\"V\":\""), output);
             if (!CONFIG::read_buffer(EP_DATA_PORT,  (byte *)&ibuf, INTEGER_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(ibuf), output);
             }
@@ -608,9 +608,9 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_ADMIN_PWD), output);
             BRIDGE::print(F("\",\"T\":\"S\",\"V\":\""), output);
             if (!CONFIG::read_string(EP_ADMIN_PWD, sbuf, MAX_LOCAL_PASSWORD_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
-                BRIDGE::print("********", output);
+                BRIDGE::print(F("********"), output);
             }
             BRIDGE::print(F("\",\"S\":\""), output);
             BRIDGE::print((const char *)CONFIG::intTostr(MAX_LOCAL_PASSWORD_LENGTH), output);
@@ -624,9 +624,9 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_USER_PWD), output);
             BRIDGE::print(F("\",\"T\":\"S\",\"V\":\""), output);
             if (!CONFIG::read_string(EP_USER_PWD, sbuf, MAX_LOCAL_PASSWORD_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
-                BRIDGE::print("********", output);
+                BRIDGE::print(F("********"), output);
             }
             BRIDGE::print(F("\",\"S\":\""), output);
             BRIDGE::print((const char *)CONFIG::intTostr(MAX_LOCAL_PASSWORD_LENGTH), output);
@@ -640,7 +640,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_HOSTNAME), output);
             BRIDGE::print(F("\",\"T\":\"S\",\"V\":\""), output);
             if (!CONFIG::read_string(EP_HOSTNAME, sbuf, MAX_HOSTNAME_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print(sbuf, output);
             }
@@ -656,7 +656,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_WIFI_MODE), output);
             BRIDGE::print(F("\",\"T\":\"B\",\"V\":\""), output);
             if (!CONFIG::read_byte(EP_WIFI_MODE, &bbuf )) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(bbuf), output);
             }
@@ -668,7 +668,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_STA_SSID), output);
             BRIDGE::print(F("\",\"T\":\"S\",\"V\":\""), output);
             if (!CONFIG::read_string(EP_STA_SSID, sbuf, MAX_SSID_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print(sbuf, output);
             }
@@ -684,9 +684,9 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_STA_PASSWORD), output);
             BRIDGE::print(F("\",\"T\":\"S\",\"V\":\""), output);
             if (!CONFIG::read_string(EP_STA_PASSWORD, sbuf, MAX_PASSWORD_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
-                BRIDGE::print("********", output);
+                BRIDGE::print(F("********"), output);
             }
             BRIDGE::print(F("\",\"S\":\""), output);
             BRIDGE::print((const char *)CONFIG::intTostr(MAX_PASSWORD_LENGTH), output);
@@ -700,7 +700,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_STA_PHY_MODE), output);
             BRIDGE::print(F("\",\"T\":\"B\",\"V\":\""), output);
             if (!CONFIG::read_byte(EP_STA_PHY_MODE, &bbuf )) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(bbuf), output);
             }
@@ -718,7 +718,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_STA_IP_MODE), output);
             BRIDGE::print(F("\",\"T\":\"B\",\"V\":\""), output);
             if (!CONFIG::read_byte(EP_STA_IP_MODE, &bbuf )) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(bbuf), output);
             }
@@ -730,7 +730,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_STA_IP_VALUE), output);
             BRIDGE::print(F("\",\"T\":\"A\",\"V\":\""), output);
             if (!CONFIG::read_buffer(EP_STA_IP_VALUE,(byte *)ipbuf, IP_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print(IPAddress(ipbuf).toString().c_str(), output);
             }
@@ -742,7 +742,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_STA_MASK_VALUE), output);
             BRIDGE::print(F("\",\"T\":\"A\",\"V\":\""), output);
             if (!CONFIG::read_buffer(EP_STA_MASK_VALUE,(byte *)ipbuf, IP_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print(IPAddress(ipbuf).toString().c_str(), output);
             }
@@ -754,7 +754,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_STA_GATEWAY_VALUE), output);
             BRIDGE::print(F("\",\"T\":\"A\",\"V\":\""), output);
             if (!CONFIG::read_buffer(EP_STA_GATEWAY_VALUE,(byte *)ipbuf, IP_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print(IPAddress(ipbuf).toString().c_str(), output);
             }
@@ -766,7 +766,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_AP_SSID), output);
             BRIDGE::print(F("\",\"T\":\"S\",\"V\":\""), output);
             if (!CONFIG::read_string(EP_AP_SSID, sbuf, MAX_SSID_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print(sbuf, output);
             }
@@ -782,9 +782,9 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_AP_PASSWORD), output);
             BRIDGE::print(F("\",\"T\":\"S\",\"V\":\""), output);
             if (!CONFIG::read_string(EP_AP_PASSWORD, sbuf, MAX_PASSWORD_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
-                BRIDGE::print("********", output);
+                BRIDGE::print(F("********"), output);
             }
             BRIDGE::print(F("\",\"S\":\""), output);
             BRIDGE::print((const char *)CONFIG::intTostr(MAX_PASSWORD_LENGTH), output);
@@ -798,7 +798,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_AP_PHY_MODE), output);
             BRIDGE::print(F("\",\"T\":\"B\",\"V\":\""), output);
             if (!CONFIG::read_byte(EP_AP_PHY_MODE, &bbuf )) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(bbuf), output);
             }
@@ -814,7 +814,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_SSID_VISIBLE), output);
             BRIDGE::print(F("\",\"T\":\"B\",\"V\":\""), output);
             if (!CONFIG::read_byte(EP_SSID_VISIBLE, &bbuf )) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(bbuf), output);
             }
@@ -826,7 +826,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_CHANNEL), output);
             BRIDGE::print(F("\",\"T\":\"B\",\"V\":\""), output);
             if (!CONFIG::read_byte(EP_CHANNEL, &bbuf )) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(bbuf), output);
             }
@@ -849,7 +849,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_AUTH_TYPE), output);
             BRIDGE::print(F("\",\"T\":\"B\",\"V\":\""), output);
             if (!CONFIG::read_byte(EP_AUTH_TYPE, &bbuf )) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(bbuf), output);
             }
@@ -869,7 +869,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_AP_IP_MODE), output);
             BRIDGE::print(F("\",\"T\":\"B\",\"V\":\""), output);
             if (!CONFIG::read_byte(EP_AP_IP_MODE, &bbuf )) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(bbuf), output);
             }
@@ -881,7 +881,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_AP_IP_VALUE), output);
             BRIDGE::print(F("\",\"T\":\"A\",\"V\":\""), output);
             if (!CONFIG::read_buffer(EP_AP_IP_VALUE,(byte *)ipbuf, IP_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print(IPAddress(ipbuf).toString().c_str(), output);
             }
@@ -893,7 +893,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_AP_MASK_VALUE), output);
             BRIDGE::print(F("\",\"T\":\"A\",\"V\":\""), output);
             if (!CONFIG::read_buffer(EP_AP_MASK_VALUE,(byte *)ipbuf, IP_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print(IPAddress(ipbuf).toString().c_str(), output);
             }
@@ -905,7 +905,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_AP_GATEWAY_VALUE), output);
             BRIDGE::print(F("\",\"T\":\"A\",\"V\":\""), output);
             if (!CONFIG::read_buffer(EP_AP_GATEWAY_VALUE,(byte *)ipbuf, IP_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print(IPAddress(ipbuf).toString().c_str(), output);
             }
@@ -922,7 +922,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_TARGET_FW), output);
             BRIDGE::print(F("\",\"T\":\"B\",\"V\":\""), output);
             if (!CONFIG::read_byte(EP_TARGET_FW, &bbuf )) {
-                BRIDGE::print("Unknown", output);
+                BRIDGE::print(F("Unknown"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(bbuf), output);
             }
@@ -946,7 +946,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_REFRESH_PAGE_TIME), output);
             BRIDGE::print(F("\",\"T\":\"B\",\"V\":\""), output);
             if (!CONFIG::read_byte(EP_REFRESH_PAGE_TIME, &bbuf )) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(bbuf), output);
             }
@@ -962,7 +962,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_REFRESH_PAGE_TIME2), output);
             BRIDGE::print(F("\",\"T\":\"B\",\"V\":\""), output);
             if (!CONFIG::read_byte(EP_REFRESH_PAGE_TIME2, &bbuf )) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(bbuf), output);
             }
@@ -978,7 +978,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_XY_FEEDRATE), output);
             BRIDGE::print(F("\",\"T\":\"I\",\"V\":\""), output);
             if (!CONFIG::read_buffer(EP_XY_FEEDRATE,  (byte *)&ibuf, INTEGER_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(ibuf), output);
             }
@@ -994,7 +994,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_Z_FEEDRATE), output);
             BRIDGE::print(F("\",\"T\":\"I\",\"V\":\""), output);
             if (!CONFIG::read_buffer(EP_Z_FEEDRATE,  (byte *)&ibuf, INTEGER_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(ibuf), output);
             }
@@ -1010,7 +1010,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_E_FEEDRATE), output);
             BRIDGE::print(F("\",\"T\":\"I\",\"V\":\""), output);
             if (!CONFIG::read_buffer(EP_E_FEEDRATE,  (byte *)&ibuf, INTEGER_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print((const char *)CONFIG::intTostr(ibuf), output);
             }
@@ -1026,7 +1026,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print((const char *)CONFIG::intTostr(EP_DATA_STRING), output);
             BRIDGE::print(F("\",\"T\":\"S\",\"V\":\""), output);
             if (!CONFIG::read_string(EP_DATA_STRING, sbuf, MAX_DATA_LENGTH)) {
-                BRIDGE::print("???", output);
+                BRIDGE::print(F("???"), output);
             } else {
                 BRIDGE::print(sbuf, output);
             }
@@ -1112,9 +1112,9 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             }
         }
         if(!response) {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
         } else {
-            BRIDGE::println(OK_CMD_MSG, output);
+            BRIDGE::printStatus(OK_CMD_MSG, output);
         }
 
     }
@@ -1168,7 +1168,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
         parameter = get_param(cmd_params,"", true);
 #ifdef AUTHENTICATION_FEATURE
         if (auth_type != LEVEL_ADMIN) {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         } else
 #endif
@@ -1184,7 +1184,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
                  BRIDGE::flush( output);
                 CONFIG::esp_restart();
             } else {
-                BRIDGE::println(INCORRECT_CMD_MSG, output);
+                BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
                 response = false;
             }
         }
@@ -1197,26 +1197,26 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             parameter = get_param(cmd_params,"", true);
             if (parameter.length() == 0) {
                 if(CONFIG::write_string(EP_USER_PWD,FPSTR(DEFAULT_USER_PWD))) {
-                    BRIDGE::println(OK_CMD_MSG, output);
+                    BRIDGE::printStatus(OK_CMD_MSG, output);
                 } else {
-                    BRIDGE::println(ERROR_CMD_MSG, output);
+                    BRIDGE::printStatus(ERROR_CMD_MSG, output);
                     response = false;
                 }
             } else {
                 if (CONFIG::isLocalPasswordValid(parameter.c_str())) {
                     if(CONFIG::write_string(EP_USER_PWD,parameter.c_str())) {
-                        BRIDGE::println(OK_CMD_MSG, output);
+                        BRIDGE::printStatus(OK_CMD_MSG, output);
                     } else {
-                        BRIDGE::println(ERROR_CMD_MSG, output);
+                        BRIDGE::printStatus(ERROR_CMD_MSG, output);
                         response = false;
                     }
                 } else {
-                    BRIDGE::println(INCORRECT_CMD_MSG, output);
+                    BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
                     response = false;
                 }
             }
         } else {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         }
         break;
@@ -1271,9 +1271,9 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
                 }
             }
             currentfile.close();
-            BRIDGE::println(OK_CMD_MSG, output);
+            BRIDGE::printStatus(OK_CMD_MSG, output);
         } else {
-            BRIDGE::println(ERROR_CMD_MSG, output);
+            BRIDGE::printStatus(ERROR_CMD_MSG, output);
             response = false;
         }
 
@@ -1285,7 +1285,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
 		parameter = get_param(cmd_params,"", true);
 #ifdef AUTHENTICATION_FEATURE
         if (auth_type != LEVEL_ADMIN) {
-            BRIDGE::println(INCORRECT_CMD_MSG, output);
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
             response = false;
         } else
 #endif 
@@ -1298,7 +1298,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
 			 //SPIFFS.begin();
 			 BRIDGE::println(F("...Done"), output);
             } else {
-			BRIDGE::println(INCORRECT_CMD_MSG, output);
+			BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
 			response = false;
             }
         }
@@ -1310,14 +1310,14 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
 #ifdef ARDUINO_ARCH_ESP8266   
 		fs::FSInfo info;
 		SPIFFS.info(info);
-		BRIDGE::print("SPIFFS Total:", output);
+		BRIDGE::print(F("SPIFFS Total:"), output);
 		BRIDGE::print(CONFIG::formatBytes(info.totalBytes).c_str(), output);
-		BRIDGE::print(" Used:", output);
+		BRIDGE::print(F(" Used:"), output);
 		BRIDGE::println(CONFIG::formatBytes(info.usedBytes).c_str(), output);
 #else
-		BRIDGE::print("SPIFFS  Total:", output);
+		BRIDGE::print(F("SPIFFS  Total:"), output);
 		BRIDGE::print(CONFIG::formatBytes(SPIFFS.totalBytes()).c_str(), output);
-		BRIDGE::print(" Used:", output);
+		BRIDGE::print(F(" Used:"), output);
 		BRIDGE::println(CONFIG::formatBytes(SPIFFS.usedBytes()).c_str(), output);
 #endif
         break;
@@ -1370,21 +1370,21 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
 #ifdef ERROR_MSG_FEATURE
         if (cmd_params=="ERROR") {
             web_interface->error_msg.clear();
-            BRIDGE::println(OK_CMD_MSG, output);
+            BRIDGE::printStatus(OK_CMD_MSG, output);
             break;
         }
 #endif
 #ifdef INFO_MSG_FEATURE
         if (cmd_params=="INFO") {
             web_interface->info_msg.clear();
-            BRIDGE::println(OK_CMD_MSG, output);
+            BRIDGE::printStatus(OK_CMD_MSG, output);
             break;
         }
 #endif
 #ifdef STATUS_MSG_FEATURE
         if (cmd_params=="STATUS") {
             web_interface->status_msg.clear();
-            BRIDGE::println(OK_CMD_MSG, output);
+            BRIDGE::printStatus(OK_CMD_MSG, output);
             break;
         }
 #endif
@@ -1398,11 +1398,11 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
 #ifdef INFO_MSG_FEATURE
             web_interface->info_msg.clear();
 #endif
-            BRIDGE::println(OK_CMD_MSG, output);
+            BRIDGE::printStatus(OK_CMD_MSG, output);
             break;
         }
     default:
-        BRIDGE::println(INCORRECT_CMD_MSG, output);
+        BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
         response = false;
     }
     return response;

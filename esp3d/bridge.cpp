@@ -31,12 +31,8 @@ WiFiClient serverClients[MAX_SRV_CLIENTS];
 
 bool BRIDGE::header_sent = false;
 String BRIDGE::buffer_web = "";
-void BRIDGE::print (const __FlashStringHelper *data, tpipe output)
-{
-    String tmp = data;
-    BRIDGE::print(tmp.c_str(), output);
-}
-void BRIDGE::print (String & data, tpipe output)
+
+void BRIDGE::print (const String & data, tpipe output)
 {
     BRIDGE::print(data.c_str(), output);
 }
@@ -73,30 +69,38 @@ void BRIDGE::print (const char * data, tpipe output)
         break;
     }
 }
-void BRIDGE::println (const __FlashStringHelper *data, tpipe output)
+
+void BRIDGE::println (const String & data, tpipe output)
 {
-    BRIDGE::print(data,output);
-#ifdef TCP_IP_DATA_FEATURE
-    BRIDGE::print("\r",output);
-#endif
-    BRIDGE::print("\n",output);
-}
-void BRIDGE::println (String & data, tpipe output)
-{
-    BRIDGE::print(data,output);
-#ifdef TCP_IP_DATA_FEATURE
-    BRIDGE::print("\r",output);
-#endif
-    BRIDGE::print("\n",output);
+   BRIDGE::println(data.c_str(), output);
 }
 void BRIDGE::println (const char * data, tpipe output)
 {
-    BRIDGE::print(data,output);
+    BRIDGE::print(data, output);
 #ifdef TCP_IP_DATA_FEATURE
-    BRIDGE::print("\r",output);
+    BRIDGE::print("\r", output);
 #endif
-    BRIDGE::print("\n",output);
+    BRIDGE::print("\n", output);
 }
+
+void BRIDGE::printStatus (const String & data, tpipe output)
+{
+    BRIDGE::printStatus(data.c_str(), output);
+}
+void BRIDGE::printStatus (const char * data, tpipe output)
+{
+    switch(output)
+    {
+    case SERIAL_PIPE:
+        header_sent = false;
+        Board::status.print(data);
+        break;
+
+    default:
+        println(data, output);
+    }
+}
+
 void BRIDGE::flush (tpipe output)
 {
     switch(output) {
@@ -124,12 +128,7 @@ void BRIDGE::flush (tpipe output)
 
 
 #ifdef TCP_IP_DATA_FEATURE
-void BRIDGE::send2TCP(const __FlashStringHelper *data)
-{
-    String tmp = data;
-    BRIDGE::send2TCP(tmp.c_str());
-}
-void BRIDGE::send2TCP(String data)
+void BRIDGE::send2TCP(const String & data)
 {
     BRIDGE::send2TCP(data.c_str());
 }

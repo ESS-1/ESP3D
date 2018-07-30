@@ -106,18 +106,12 @@ public:
         register bool hasChanged = (_icon != icon);
         _icon = icon;
 
-        for (int i = 0; i < SSD1306_CHARS_PER_LINE-1; ++i)
+        for (int i = 0; i < SSD1306_CHARS_PER_LINE-1 && s[i] != NULL; ++i)
         {
-            char c = s[i];
-            if (c != _summary[i])
+            if (s[i] != _summary[i])
             {
-                _summary[i] = c;
+                _summary[i] = s[i];
                 hasChanged = true;
-            }
-
-            if (c == NULL)
-            {
-                break;
             }
         }
 
@@ -127,7 +121,22 @@ public:
 
     virtual void print(const char *s)
     {
-        memccpy(_log[_line_idx], s, strlen(s)+1, SSD1306_CHARS_PER_LINE-1);
+        bool skipNextIfPercent = false;
+        for (int i = 0; i < SSD1306_CHARS_PER_LINE-1 && s[i] != NULL; ++i)
+        {
+            register char c = s[i];
+
+            // Unescape '%%'
+            if (skipNextIfPercent && c == '%')
+            {
+                skipNextIfPercent = false;
+                continue;
+            }
+            skipNextIfPercent = (c == '%');
+
+            _log[_line_idx][i] = c;
+        }
+
         refresh();
     }
 

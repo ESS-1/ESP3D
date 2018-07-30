@@ -1753,7 +1753,7 @@ void CONFIG::print_config(tpipe output, bool plaintext)
          if (!plaintext)BRIDGE::print(F("\","), output);
         else BRIDGE::print(F("\n"), output);
     } else {
-        BRIDGE::print("Wifi Off", output);
+        BRIDGE::print(F("Wifi Off"), output);
         if (!plaintext)BRIDGE::print(F("\","), output);
         else BRIDGE::print(F("\n"), output);
     }
