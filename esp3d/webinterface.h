@@ -68,7 +68,7 @@ public:
     STORESTRINGS_CLASS status_msg;
 #endif
     bool restartmodule;
-    String getContentType(String filename);
+    String getContentType(const String & filename);
     level_authenticate_type is_authenticated();
     bool AddAuthIP(auth_ip * item);
     bool blockserial;

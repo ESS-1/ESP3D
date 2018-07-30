@@ -33,11 +33,11 @@ public:
 #ifdef TCP_IP_DATA_FEATURE
     static void read_buffer_tcp(uint8_t b);
 #endif
-    static bool check_command(String buffer, tpipe output, bool handlelockserial = true);
+    static bool check_command(const String & buffer, tpipe output, bool handlelockserial = true);
     static bool execute_command(int cmd,String cmd_params, tpipe output, level_authenticate_type auth_level = LEVEL_GUEST);
-    static String get_param(String & cmd_params, const char * id, bool withspace = false);
-    static bool isadmin(String & cmd_params);
-    static bool isuser(String & cmd_params);
+    static String get_param(const String & cmd_params, const char * id, bool withspace = false);
+    static bool isadmin(const String & cmd_params);
+    static bool isuser(const String & cmd_params);
 };
 
 #endif

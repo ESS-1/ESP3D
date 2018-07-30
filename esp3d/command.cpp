@@ -40,7 +40,7 @@ String COMMAND::buffer_tcp;
 #define INCORRECT_CMD_MSG (output == WEB_PIPE)?F("Error: Incorrect Command"):F("Incorrect Cmd")
 #define OK_CMD_MSG (output == WEB_PIPE)?F("ok"):F("Cmd Ok")
 
-String COMMAND::get_param(String & cmd_params, const char * id, bool withspace)
+String COMMAND::get_param(const String & cmd_params, const char * id, bool withspace)
 {
     static String parameter;
     String sid=id;
@@ -82,7 +82,7 @@ String COMMAND::get_param(String & cmd_params, const char * id, bool withspace)
 }
 #ifdef AUTHENTICATION_FEATURE
 //check admin password
-bool COMMAND::isadmin(String & cmd_params)
+bool COMMAND::isadmin(const String & cmd_params)
 {
     String adminpassword;
     String sadminPassword;
@@ -99,7 +99,7 @@ bool COMMAND::isadmin(String & cmd_params)
     }
 }
 //check user password - admin password is also valid
-bool COMMAND::isuser(String & cmd_params)
+bool COMMAND::isuser(const String & cmd_params)
 {
     String userpassword;
     String suserPassword;
@@ -1408,7 +1408,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
     return response;
 }
 
-bool COMMAND::check_command(String buffer, tpipe output, bool handlelockserial)
+bool COMMAND::check_command(const String & buffer, tpipe output, bool handlelockserial)
 {
     String buffer2;
     LOG("Check Command:")

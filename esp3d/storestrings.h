@@ -28,7 +28,7 @@ public:
     STORESTRINGS_CLASS (int maxsize = -1, int maxstringlength=-1);
     ~STORESTRINGS_CLASS ();
     bool add (const char * string);
-    inline bool add (String & string)
+    inline bool add (const String & string)
     {
         return add(string.c_str());
     };

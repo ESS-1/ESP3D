@@ -1697,7 +1697,7 @@ level_authenticate_type WEBINTERFACE_CLASS::ResetAuthIP(IPAddress ip,const char 
 #endif
 
 //Check what is the content tye according extension file
-String WEBINTERFACE_CLASS::getContentType(String filename)
+String WEBINTERFACE_CLASS::getContentType(const String & filename)
 {
     if(filename.endsWith(".htm")) {
         return "text/html";
