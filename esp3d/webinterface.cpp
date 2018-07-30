@@ -19,6 +19,7 @@
 */
 
 #include <pgmspace.h>
+#include "board.h"
 #include "config.h"
 #include "webinterface.h"
 #include "wificonf.h"
@@ -159,7 +160,7 @@ void SPIFFSFileupload()
     //Guest cannot upload
     if (auth_level == LEVEL_GUEST) {
         web_interface->_upload_status=UPLOAD_STATUS_CANCELLED;
-        ESP_SERIAL_OUT.println("M117 Error ESP upload");
+        Board::status.print("Error ESP upload");
 #ifdef ARDUINO_ARCH_ESP8266
         web_interface->web_server.client().stopAll();
 #else 
@@ -185,7 +186,7 @@ void SPIFFSFileupload()
         } else {
             filename = "/user" + upload.filename;
         }
-        ESP_SERIAL_OUT.println("M117 Start ESP upload");
+        Board::status.print("Start ESP upload");
         //create file
 		web_interface->fsUploadFile = SPIFFS.open(filename, SPIFFS_FILE_WRITE);
         //check If creation succeed
@@ -195,7 +196,7 @@ void SPIFFSFileupload()
         } else {
             //if no set cancel flag
             web_interface->_upload_status=UPLOAD_STATUS_CANCELLED;
-            ESP_SERIAL_OUT.println("M117 Error ESP create");
+            Board::status.print("Error ESP create");
 #ifdef ARDUINO_ARCH_ESP8266
 			web_interface->web_server.client().stopAll();
 #else 
@@ -224,7 +225,7 @@ void SPIFFSFileupload()
 #else 
 			web_interface->web_server.client().stop();
 #endif
-            ESP_SERIAL_OUT.println("M117 Error ESP write");
+            Board::status.print("Error ESP write");
         }
         //Upload end
         //**************
@@ -235,7 +236,7 @@ void SPIFFSFileupload()
         DEBUG_PERF_VARIABLE.add(String(write_time).c_str());
         DEBUG_PERF_VARIABLE.add(String(filesize).c_str());
 #endif
-        ESP_SERIAL_OUT.println("M117 End ESP upload");
+        Board::status.print("End ESP upload");
         //check if file is still open
         if(web_interface->fsUploadFile) {
             //close it
@@ -250,16 +251,16 @@ void SPIFFSFileupload()
 			web_interface->web_server.client().stop();
 #endif
             SPIFFS.remove(filename);
-            ESP_SERIAL_OUT.println("M117 Error ESP close");
+            Board::status.print("Error ESP close");
         }
         //Upload cancelled
         //**************
     } else {
-			ESP_SERIAL_OUT.println("M117 Error ESP close");
+			Board::status.print("Error ESP close");
 			return;
         web_interface->_upload_status=UPLOAD_STATUS_CANCELLED;
         SPIFFS.remove(filename);
-        ESP_SERIAL_OUT.println("M117 Error ESP upload");
+        Board::status.print("Error ESP upload");
     }
     delay(0);
 }
@@ -280,7 +281,7 @@ void SDFile_serial_upload()
     //Guest cannot upload - only admin and user
     if(web_interface->is_authenticated() == LEVEL_GUEST) {
         web_interface->_upload_status=UPLOAD_STATUS_CANCELLED;
-        ESP_SERIAL_OUT.println("M117 SD upload rejected");
+        Board::status.print("SD upload rejected");
         LOG("SD upload rejected\r\n");
         if (!client_closed){
             //web_interface->web_server.client().stopAll();
@@ -307,20 +308,20 @@ void SDFile_serial_upload()
         is_comment = false;
         previous = 0;
         web_interface->_upload_status= UPLOAD_STATUS_ONGOING;
-        ESP_SERIAL_OUT.println("M117 Uploading...");
-        ESP_SERIAL_OUT.flush();
+        Board::status.print("Uploading...");
+        Board::printerPort.flush();
 #ifdef DEBUG_PERFORMANCE
         startupload = millis();
         write_time = 0;
         filesize = 0;
 #endif
         LOG("Clear Serial\r\n");
-        if(ESP_SERIAL_OUT.available()) {
+        if(Board::printerPort.available()) {
                 //get size of buffer
-                size_t len = ESP_SERIAL_OUT.available();
+                size_t len = Board::printerPort.available();
                 uint8_t sbuf[len+1];
                 //read buffer
-                ESP_SERIAL_OUT.readBytes(sbuf, len);
+                Board::printerPort.readBytes(sbuf, len);
                 //convert buffer to zero end array
                 sbuf[len]='\0';
                 //use string because easier to handle
@@ -332,20 +333,20 @@ void SDFile_serial_upload()
         String command = "M28 " + upload.filename;
         LOG(command);
         LOG("\r\n");
-        ESP_SERIAL_OUT.println(command);
-        ESP_SERIAL_OUT.flush();
+        Board::printerPort.println(command);
+        Board::printerPort.flush();
         filename = upload.filename;
         //now need to purge all serial data
         //let's sleep 1s
         //delay(1000);
         for (int retry=0; retry < 400; retry++) { //time out is  5x400ms = 2000ms
             //if there is something in serial buffer
-            if(ESP_SERIAL_OUT.available()) {
+            if(Board::printerPort.available()) {
                 //get size of buffer
-                size_t len = ESP_SERIAL_OUT.available();
+                size_t len = Board::printerPort.available();
                 uint8_t sbuf[len+1];
                 //read buffer
-                ESP_SERIAL_OUT.readBytes(sbuf, len);
+                Board::printerPort.readBytes(sbuf, len);
                 //convert buffer to zero end array
                 sbuf[len]='\0';
                 //use string because easier to handle
@@ -402,19 +403,19 @@ void SDFile_serial_upload()
                         for (int r = 0 ; r < NB_RETRY ; r++) {
                             response = "";
                             //print out line
-                            ESP_SERIAL_OUT.print(buffer_line);
+                            Board::printerPort.print(buffer_line);
                             LOG(buffer_line);
                             //ensure buffer is empty before continuing
-                            ESP_SERIAL_OUT.flush();
+                            Board::printerPort.flush();
                             //wait for answer with time out
                             for (int retry=0; retry < 30; retry++) { //time out 30x5ms = 150ms
                                 //if there is serial data
-                                if(ESP_SERIAL_OUT.available()) {
+                                if(Board::printerPort.available()) {
                                     //get size of available data
-                                    size_t len = ESP_SERIAL_OUT.available();
+                                    size_t len = Board::printerPort.available();
                                     uint8_t sbuf[len+1];
                                     //read serial buffer
-                                    ESP_SERIAL_OUT.readBytes(sbuf, len);
+                                    Board::printerPort.readBytes(sbuf, len);
                                     //convert buffer in zero end array
                                     sbuf[len]='\0';
                                     //use string because easier
@@ -441,12 +442,12 @@ void SDFile_serial_upload()
                                 break;
                             }
                             //purge extra serial if any
-                            if(ESP_SERIAL_OUT.available()) {
+                            if(Board::printerPort.available()) {
                                 //get size of available data
-                                size_t len = ESP_SERIAL_OUT.available();
+                                size_t len = Board::printerPort.available();
                                 uint8_t sbuf[len+1];
                                 //read serial buffer
-                                ESP_SERIAL_OUT.readBytes(sbuf, len);
+                                Board::printerPort.readBytes(sbuf, len);
                                 //convert buffer in zero end array
                                 sbuf[len]='\0';
                             }
@@ -494,26 +495,26 @@ void SDFile_serial_upload()
     } else if(upload.status == UPLOAD_FILE_END) {
         if (buffer_size > 0) { //if last part does not have '\n'
             //print the line
-            ESP_SERIAL_OUT.print(buffer_line);
+            Board::printerPort.print(buffer_line);
             if (is_comment && (previous == '\r')) {
-                ESP_SERIAL_OUT.print("\r\n");
+                Board::printerPort.print("\r\n");
             } else {
-                ESP_SERIAL_OUT.print("\n");
+                Board::printerPort.print("\n");
             }
-            ESP_SERIAL_OUT.flush();
+            Board::printerPort.flush();
             //if resend use buffer
             bool success = false;
             //check NB_RETRY times if get no error when send line
             for (int r = 0 ; r < NB_RETRY ; r++) {
                 response = "";
-                ESP_SERIAL_OUT.print(buffer_line);
-                ESP_SERIAL_OUT.flush();
+                Board::printerPort.print(buffer_line);
+                Board::printerPort.flush();
                 //wait for answer with time out
                 for (int retry=0; retry < 20; retry++) { //time out
-                    if(ESP_SERIAL_OUT.available()) {
-                        size_t len = ESP_SERIAL_OUT.available();
+                    if(Board::printerPort.available()) {
+                        size_t len = Board::printerPort.available();
                         uint8_t sbuf[len+1];
-                        ESP_SERIAL_OUT.readBytes(sbuf, len);
+                        Board::printerPort.readBytes(sbuf, len);
                         sbuf[len]='\0';
                         response = (const char*)sbuf;
                         if ((response.indexOf("wait")>-1)||(response.indexOf("ok")>-1)) {
@@ -546,13 +547,13 @@ void SDFile_serial_upload()
         buffer_size=0;
         buffer_line[buffer_size] = '\0';
         //send M29 command to close file on SD
-        ESP_SERIAL_OUT.print("\r\nM29\r\n");
-        ESP_SERIAL_OUT.flush();
+        Board::printerPort.print("\r\nM29\r\n");
+        Board::printerPort.flush();
         web_interface->blockserial = false;
         delay(1000);//give time to FW
         //resend M29 command to close file on SD as first command may be lost
-        ESP_SERIAL_OUT.print("\r\nM29\r\n");
-        ESP_SERIAL_OUT.flush();
+        Board::printerPort.print("\r\nM29\r\n");
+        Board::printerPort.flush();
 #ifdef DEBUG_PERFORMANCE
         uint32_t endupload = millis();
         DEBUG_PERF_VARIABLE.add(String(endupload-startupload).c_str());
@@ -569,15 +570,15 @@ void SDFile_serial_upload()
                 client_closed = true;
             }   
             filename = "M30 " + filename;
-            ESP_SERIAL_OUT.println(filename);
-            ESP_SERIAL_OUT.println("M117 SD upload failed");
-            ESP_SERIAL_OUT.flush();
+            Board::printerPort.println(filename);
+            Board::status.print("SD upload failed");
+            Board::printerPort.flush();
 
         } else {
             LOG("with success\r\n");
             web_interface->_upload_status=UPLOAD_STATUS_SUCCESSFUL;
-            ESP_SERIAL_OUT.println("M117 SD upload done");
-            ESP_SERIAL_OUT.flush();
+            Board::status.print("SD upload done");
+            Board::printerPort.flush();
         }
         //Upload cancelled
         //**************
@@ -588,17 +589,17 @@ void SDFile_serial_upload()
         buffer_size=0;
         buffer_line[buffer_size] = '\0';
         //send M29 command to close file on SD
-        ESP_SERIAL_OUT.print("\r\nM29\r\n");
-        ESP_SERIAL_OUT.flush();
+        Board::printerPort.print("\r\nM29\r\n");
+        Board::printerPort.flush();
         web_interface->blockserial = false;
         delay(1000);
         //resend M29 command to close file on SD as first command may be lost
-        ESP_SERIAL_OUT.print("\r\nM29\r\n");
-        ESP_SERIAL_OUT.flush();
+        Board::printerPort.print("\r\nM29\r\n");
+        Board::printerPort.flush();
         filename = "M30 " + filename;
-        ESP_SERIAL_OUT.println(filename);
-        ESP_SERIAL_OUT.println("M117 SD upload failed");
-        ESP_SERIAL_OUT.flush();
+        Board::printerPort.println(filename);
+        Board::status.print("SD upload failed");
+        Board::printerPort.flush();
     }
 }
 
@@ -617,7 +618,7 @@ void WebUpdateUpload()
 #else 
 		web_interface->web_server.client().stop();
 #endif
-        ESP_SERIAL_OUT.println("M117 Update failed");
+        Board::status.print("Update failed");
         LOG("SD Update failed\r\n");
         return;
     }
@@ -626,7 +627,7 @@ void WebUpdateUpload()
     //Upload start
     //**************
     if(upload.status == UPLOAD_FILE_START) {
-        ESP_SERIAL_OUT.println(F("M117 Update Firmware"));
+        Board::status.print(F("Update Firmware"));
         web_interface->_upload_status= UPLOAD_STATUS_ONGOING;
 #ifdef ARDUINO_ARCH_ESP8266
 		WiFiUDP::stopAll();
@@ -641,8 +642,8 @@ void WebUpdateUpload()
         if(!Update.begin(maxSketchSpace)) { //start with max available size
             web_interface->_upload_status=UPLOAD_STATUS_CANCELLED;
         } else {
-        if (( CONFIG::GetFirmwareTarget() == REPETIER4DV) || (CONFIG::GetFirmwareTarget() == REPETIER)) ESP_SERIAL_OUT.println(F("M117 Update 0%%"));
-        else ESP_SERIAL_OUT.println(F("M117 Update 0%"));
+/*TODO:WF3D*/        if (( CONFIG::GetFirmwareTarget() == REPETIER4DV) || (CONFIG::GetFirmwareTarget() == REPETIER)) Board::printerPort.println(F("M117 Update 0%%"));
+/*TODO:WF3D*/        else Board::printerPort.println(F("M117 Update 0%"));
         }
         //Upload write
         //**************
@@ -652,10 +653,10 @@ void WebUpdateUpload()
             //we do not know the total file size yet but we know the available space so let's use it
             if ( ((100 * upload.totalSize) / maxSketchSpace) !=last_upload_update) {
                 last_upload_update = (100 * upload.totalSize) / maxSketchSpace;
-                ESP_SERIAL_OUT.print(F("M117 Update "));
-                ESP_SERIAL_OUT.print(last_upload_update);
-                if (( CONFIG::GetFirmwareTarget() == REPETIER4DV) || (CONFIG::GetFirmwareTarget() == REPETIER)) ESP_SERIAL_OUT.println(F("%%"));
-                else ESP_SERIAL_OUT.println(F("%"));
+/*TODO:WF3D*/                Board::printerPort.print(F("M117 Update "));
+/*TODO:WF3D*/                Board::printerPort.print(last_upload_update);
+/*TODO:WF3D*/                if (( CONFIG::GetFirmwareTarget() == REPETIER4DV) || (CONFIG::GetFirmwareTarget() == REPETIER)) Board::printerPort.println(F("%%"));
+/*TODO:WF3D*/                else Board::printerPort.println(F("%"));
             }
             if(Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
                 web_interface->_upload_status=UPLOAD_STATUS_CANCELLED;
@@ -666,12 +667,12 @@ void WebUpdateUpload()
     } else if(upload.status == UPLOAD_FILE_END) {
         if(Update.end(true)) { //true to set the size to the current progress
             //Now Reboot
-            if (( CONFIG::GetFirmwareTarget() == REPETIER4DV) || (CONFIG::GetFirmwareTarget() == REPETIER)) ESP_SERIAL_OUT.println(F("M117 Update 100%%"));
-            else ESP_SERIAL_OUT.println(F("M117 Update 100%"));
+/*TODO:WF3D*/            if (( CONFIG::GetFirmwareTarget() == REPETIER4DV) || (CONFIG::GetFirmwareTarget() == REPETIER)) Board::printerPort.println(F("M117 Update 100%%"));
+/*TODO:WF3D*/            else Board::printerPort.println(F("M117 Update 100%"));
             web_interface->_upload_status=UPLOAD_STATUS_SUCCESSFUL;
         }
     } else if(upload.status == UPLOAD_FILE_ABORTED) {
-        ESP_SERIAL_OUT.println(F("M117 Update Failed"));
+        Board::status.print(F("Update Failed"));
         Update.end();
         web_interface->_upload_status=UPLOAD_STATUS_CANCELLED;
     }
@@ -1285,7 +1286,7 @@ void handle_web_command()
             LOG("Block Serial\r\n")
             //empty the serial buffer and incoming data
             LOG("Start PurgeSerial\r\n")
-            if(ESP_SERIAL_OUT.available()) {
+            if(Board::printerPort.available()) {
                 BRIDGE::processFromSerial2TCP();
                 delay(1);
             }
@@ -1297,13 +1298,13 @@ void handle_web_command()
             //send command
             LOG(String(cmd.length()))
             LOG("Start PurgeSerial\r\n")
-            if(ESP_SERIAL_OUT.available()) {
+            if(Board::printerPort.available()) {
                 BRIDGE::processFromSerial2TCP();
                 delay(1);
             }
             LOG("End PurgeSerial\r\n")
             LOG("Send Command\r\n")
-            ESP_SERIAL_OUT.println(cmd);
+            Board::printerPort.println(cmd);
             count = 0;
             String current_buffer;
             String current_line;
@@ -1314,12 +1315,12 @@ void handle_web_command()
             //pickup the list
             while (count < MAX_TRY) {
                 //give some time between each buffer
-                if (ESP_SERIAL_OUT.available()) {
+                if (Board::printerPort.available()) {
                     count = 0;
-                    size_t len = ESP_SERIAL_OUT.available();
+                    size_t len = Board::printerPort.available();
                     uint8_t sbuf[len+1];
                     //read buffer
-                    ESP_SERIAL_OUT.readBytes(sbuf, len);
+                    Board::printerPort.readBytes(sbuf, len);
                     //change buffer as string
                     sbuf[len]='\0';
                     //add buffer to current one if any
@@ -1396,7 +1397,7 @@ void handle_web_command()
             }
             web_interface->web_server.sendContent("");
             LOG("Start PurgeSerial\r\n")
-            if(ESP_SERIAL_OUT.available()) {
+            if(Board::printerPort.available()) {
                 BRIDGE::processFromSerial2TCP();
                 delay(1);
             }
@@ -1476,7 +1477,7 @@ void handle_web_command_silent()
         if ((web_interface->blockserial) == false) {
             LOG("Send Command\r\n")
             //send command
-            ESP_SERIAL_OUT.println(cmd);
+            Board::printerPort.println(cmd);
             web_interface->web_server.send(200,"text/plain","ok");
         } else {
             web_interface->web_server.send(200,"text/plain","Serial is busy, retry later!");

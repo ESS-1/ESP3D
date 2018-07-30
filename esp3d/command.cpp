@@ -21,6 +21,8 @@
 #include "command.h"
 #include "wificonf.h"
 #include "webinterface.h"
+#include "board.h"
+
 #ifndef FS_NO_GLOBALS
 #define FS_NO_GLOBALS
 #endif
@@ -34,9 +36,9 @@
 String COMMAND::buffer_serial;
 String COMMAND::buffer_tcp;
 
-#define ERROR_CMD_MSG (output == WEB_PIPE)?F("Error: Wrong Command"):F("M117 Cmd Error")
-#define INCORRECT_CMD_MSG (output == WEB_PIPE)?F("Error: Incorrect Command"):F("M117 Incorrect Cmd")
-#define OK_CMD_MSG (output == WEB_PIPE)?F("ok"):F("M117 Cmd Ok")
+/*TODO:WF3D*/#define ERROR_CMD_MSG (output == WEB_PIPE)?F("Error: Wrong Command"):F("M117 Cmd Error")
+/*TODO:WF3D*/#define INCORRECT_CMD_MSG (output == WEB_PIPE)?F("Error: Incorrect Command"):F("M117 Incorrect Cmd")
+/*TODO:WF3D*/#define OK_CMD_MSG (output == WEB_PIPE)?F("ok"):F("M117 Cmd Ok")
 
 String COMMAND::get_param(String & cmd_params, const char * id, bool withspace)
 {
@@ -358,19 +360,19 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             if (mode == 0) {
                  if (WiFi.getMode() !=WIFI_OFF) {
                      //disable wifi
-                     ESP_SERIAL_OUT.println("M117 Disabling Wifi");
-                     WiFi.mode(WIFI_OFF);
+                     Board::status.print("Disabling Wifi");
+/*TODO:WF3D_EEPROM*/                     WiFi.mode(WIFI_OFF);
                      wifi_config.Disable_servers();
                      return response;
-                 } else BRIDGE::println("M117 Wifi already off", output);
+/*TODO:WF3D*/                 } else BRIDGE::println("M117 Wifi already off", output);
             }
             else if (mode == 1) { //restart device is the best way to start everything clean
                  if (WiFi.getMode() == WIFI_OFF) {
-                      ESP_SERIAL_OUT.println("M117 Enabling Wifi");
+                      Board::status.print("Enabling Wifi");
                       CONFIG::esp_restart();
-                 } else BRIDGE::println("M117 Wifi already on", output);
+/*TODO:WF3D*/                 } else BRIDGE::println("M117 Wifi already on", output);
             } else  { //restart wifi and restart is the best way to start everything clean
-                 ESP_SERIAL_OUT.println("M117 Enabling Wifi");
+                 Board::status.print("Enabling Wifi");
                  CONFIG::esp_restart();
             }
         }
@@ -428,7 +430,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             } else {
                 int pin = parameter.toInt();
                 //check pin is valid and not serial used pins
-                if ((pin >= 0) && (pin <= 16) && !((pin == 1) || (pin == 3))) {
+                if ((pin >= 0) && (pin <= 16) && !Board::isPinUsed(pin)) {
                     //check if is set or get
                     parameter = get_param(cmd_params,"V", false);
                     //it is a get
@@ -1083,10 +1085,9 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
                     response = false;
                     } else {
                     //dynamique refresh is better than restart the board
-                    if (pos == EP_TARGET_FW)CONFIG::InitFirmwareTarget();
+                    if (pos == EP_TARGET_FW) CONFIG::InitFirmwareTarget();
                     if (pos == EP_IS_DIRECT_SD){
                         CONFIG::InitDirectSD();
-                        if (CONFIG::is_direct_sd) CONFIG::InitPins();
                         }
                     }
                 }
@@ -1124,7 +1125,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
     //[ESP410]<plain>
     case 410: {
 		parameter = get_param(cmd_params,"", true);
-		int n = WiFi.scanNetworks();
+/*TODO:WF3D_EEPROM*/		int n = WiFi.scanNetworks();
 		bool plain = parameter == "plain";
         if (!plain)BRIDGE::print(F("{\"AP_LIST\":["), output);
         for (int i = 0; i < n; ++i) {
@@ -1150,7 +1151,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             }
         if (!plain)BRIDGE::print(F("]}"), output);
         else BRIDGE::print(F("\n"), output);
-        WiFi.scanDelete();
+/*TODO:WF3D_EEPROM*/        WiFi.scanDelete();
 	}
 	break;
 	//Get ESP current status in plain or JSON
@@ -1234,7 +1235,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
         FS_FILE currentfile = SPIFFS.open(cmd_params, SPIFFS_FILE_READ);
         if (currentfile) {//if file open success
             //flush to be sure send buffer is empty
-            ESP_SERIAL_OUT.flush();
+            Board::printerPort.flush();
             //until no line in file
             while (currentfile.available()) {
                 String currentline = currentfile.readStringUntil('\n');
@@ -1261,10 +1262,10 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
                         }
                     } else {
                         //send line to serial
-                        ESP_SERIAL_OUT.println(currentline);
+                        Board::printerPort.println(currentline);
                         //flush to be sure send buffer is empty
                         delay(0);
-                        ESP_SERIAL_OUT.flush();
+                        Board::printerPort.flush();
                     }
                  delay(0);   
                 }

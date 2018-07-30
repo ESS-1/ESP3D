@@ -22,6 +22,7 @@
 #include "bridge.h"
 #include "command.h"
 #include "webinterface.h"
+#include "board.h"
 
 #ifdef TCP_IP_DATA_FEATURE
 WiFiServer * data_server;
@@ -44,7 +45,7 @@ void BRIDGE::print (const char * data, tpipe output)
     switch(output) {
     case SERIAL_PIPE:
         header_sent = false;
-        ESP_SERIAL_OUT.print(data);
+        Board::printerPort.print(data);
         break;
 #ifdef TCP_IP_DATA_FEATURE
     case TCP_PIPE:
@@ -100,7 +101,7 @@ void BRIDGE::flush (tpipe output)
 {
     switch(output) {
     case SERIAL_PIPE:
-        ESP_SERIAL_OUT.flush();
+        Board::printerPort.flush();
         break;
 #ifdef TCP_IP_DATA_FEATURE
     case TCP_PIPE:
@@ -147,10 +148,10 @@ bool BRIDGE::processFromSerial2TCP()
 {
     uint8_t i;
     //check UART for data
-    if(ESP_SERIAL_OUT.available()) {
-        size_t len = ESP_SERIAL_OUT.available();
+    if(Board::printerPort.available()) {
+        size_t len = Board::printerPort.available();
         uint8_t sbuf[len];
-        ESP_SERIAL_OUT.readBytes(sbuf, len);
+        Board::printerPort.readBytes(sbuf, len);
 #ifdef TCP_IP_DATA_FEATURE
           if (WiFi.getMode()!=WIFI_OFF ) {
             //push UART data to all connected tcp clients
@@ -198,7 +199,7 @@ void BRIDGE::processFromTCP2Serial()
                     //get data from the tcp client and push it to the UART
                     while(serverClients[i].available()) {
                         data = serverClients[i].read();
-                        ESP_SERIAL_OUT.write(data);
+                        Board::printerPort.write(data);
                         COMMAND::read_buffer_tcp(data);
                     }
                 }

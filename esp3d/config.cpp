@@ -18,6 +18,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "config.h"
+#include "board.h"
 #include <EEPROM.h>
 #ifndef FS_NO_GLOBALS
 #define FS_NO_GLOBALS
@@ -87,9 +88,9 @@ bool CONFIG::InitBaudrate(){
      if ( !CONFIG::read_buffer(EP_BAUD_RATE,  (byte *)&baud_rate, INTEGER_LENGTH)) return false;
       if ( ! (baud_rate==9600 || baud_rate==19200 ||baud_rate==38400 ||baud_rate==57600 ||baud_rate==115200 ||baud_rate==230400 ||baud_rate==250000) ) return false;
      //setup serial
-     if (ESP_SERIAL_OUT.baudRate() != baud_rate)ESP_SERIAL_OUT.begin(baud_rate);
+     if (Board::printerPort.baudRate() != baud_rate)Board::printerPort.begin(baud_rate);
 #ifdef ARDUINO_ARCH_ESP8266
-     ESP_SERIAL_OUT.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
+     Board::printerPort.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
 #endif
      wifi_config.baud_rate=baud_rate;
      delay(1000);
@@ -701,22 +702,16 @@ bool CONFIG::update_settings(){
 void CONFIG::esp_restart()
 {
     LOG("Restarting\r\n")
-    ESP_SERIAL_OUT.flush();
+    Board::printerPort.flush();
     delay(500);
 #ifdef ARDUINO_ARCH_ESP8266
-    ESP_SERIAL_OUT.swap();
+    Board::printerPort.swap();
 #endif
     delay(100);
     ESP.restart();
     while (1) {
         delay(1);
     };
-}
-
-void  CONFIG::InitPins(){
-#ifdef RECOVERY_FEATURE
-    pinMode(RESET_CONFIG_PIN, INPUT);
-#endif
 }
 
 bool CONFIG::is_direct_sd = false;
@@ -1009,7 +1004,7 @@ bool CONFIG::check_update_presence( ){
      if (CONFIG::is_direct_sd) { 
          long baud_rate=0;
          if (!CONFIG::read_buffer(EP_BAUD_RATE,  (byte *)&baud_rate, INTEGER_LENGTH)) return false;
-         if (ESP_SERIAL_OUT.baudRate() != baud_rate)ESP_SERIAL_OUT.begin(baud_rate);
+         if (Board::printerPort.baudRate() != baud_rate)Board::printerPort.begin(baud_rate);
          CONFIG::InitFirmwareTarget();
          delay(500);
          String cmd = "M20";
@@ -1028,12 +1023,12 @@ bool CONFIG::check_update_presence( ){
         //to avoid any pollution if Uploading file to SDCard
         //block every query
         //empty the serial buffer and incoming data
-        if(ESP_SERIAL_OUT.available()) {
+        if(Board::printerPort.available()) {
             BRIDGE::processFromSerial2TCP();
             delay(1);
         }
         //Send command
-        ESP_SERIAL_OUT.println(cmd);
+        Board::printerPort.println(cmd);
         count = 0;
         String current_buffer;
         String current_line;
@@ -1043,12 +1038,12 @@ bool CONFIG::check_update_presence( ){
         //pickup the list
         while (count < MAX_TRY) {
             //give some time between each buffer
-            if (ESP_SERIAL_OUT.available()) {
+            if (Board::printerPort.available()) {
                 count = 0;
-                size_t len = ESP_SERIAL_OUT.available();
+                size_t len = Board::printerPort.available();
                 uint8_t sbuf[len+1];
                 //read buffer
-                ESP_SERIAL_OUT.readBytes(sbuf, len);
+                Board::printerPort.readBytes(sbuf, len);
                 //change buffer as string
                 sbuf[len]='\0';
                 //add buffer to current one if any
@@ -1088,7 +1083,7 @@ bool CONFIG::check_update_presence( ){
             }
             count++;
         }
-        if(ESP_SERIAL_OUT.available()) {
+        if(Board::printerPort.available()) {
             BRIDGE::processFromSerial2TCP();
             delay(1);
         }
@@ -1408,7 +1403,7 @@ void CONFIG::print_config(tpipe output, bool plaintext)
 #endif
     if (!plaintext)BRIDGE::print(F("\"baud_rate\":\""), output);
     else BRIDGE::print(F("Baud rate: "), output);
-    uint32_t br = ESP_SERIAL_OUT.baudRate();
+    uint32_t br = Board::printerPort.baudRate();
 #ifdef ARDUINO_ARCH_ESP32
     //workaround for ESP32
     if(br == 115201)br = 115200;
@@ -1813,10 +1808,60 @@ void CONFIG::print_config(tpipe output, bool plaintext)
     if (!plaintext)BRIDGE::print(F("\","), output);
     else BRIDGE::print(F("\n"), output);
 
-    if (!plaintext)BRIDGE::print(F("\"pin recovery\":\""), output);
-    else BRIDGE::print(F("Pin Recovery: "), output);
-#ifdef RECOVERY_FEATURE
+    if (!plaintext)BRIDGE::print(F("\"settings reset button\":\""), output);
+    else BRIDGE::print(F("Settings reset button: "), output);
+#ifdef PIN_IN_SETTINGS_RESET
     BRIDGE::print(F("Enabled"), output);
+#else
+    BRIDGE::print(F("Disabled"), output);
+#endif
+    if (!plaintext)BRIDGE::print(F("\","), output);
+    else BRIDGE::print(F("\n"), output);
+
+    if (!plaintext)BRIDGE::print(F("\"printer reset output\":\""), output);
+    else BRIDGE::print(F("Printer reset output: "), output);
+#ifdef PIN_OUT_PRINTER_RESET
+    BRIDGE::print(F("Enabled"), output);
+#else
+    BRIDGE::print(F("Disabled"), output);
+#endif
+    if (!plaintext)BRIDGE::print(F("\","), output);
+    else BRIDGE::print(F("\n"), output);
+
+    if (!plaintext)BRIDGE::print(F("\"UART switch\":\""), output);
+    else BRIDGE::print(F("UART switch: "), output);
+#ifdef PIN_OUT_UART_SWITCH
+    BRIDGE::print(F("Enabled"), output);
+#else
+    BRIDGE::print(F("Disabled"), output);
+#endif
+    if (!plaintext)BRIDGE::print(F("\","), output);
+    else BRIDGE::print(F("\n"), output);
+
+    if (!plaintext)BRIDGE::print(F("\"status LED\":\""), output);
+    else BRIDGE::print(F("Status LED: "), output);
+#if defined(PIN_OUT_LED_R) || defined(PIN_OUT_LED_G) || defined(PIN_OUT_LED_B)
+    BRIDGE::print(F(
+    #ifdef PIN_OUT_LED_R
+        "R"
+    #endif
+    #ifdef PIN_OUT_LED_G
+        "G"
+    #endif
+    #ifdef PIN_OUT_LED_B
+        "B"
+    #endif
+        ), output);
+#else
+    BRIDGE::print(F("Disabled"), output);
+#endif
+    if (!plaintext)BRIDGE::print(F("\","), output);
+    else BRIDGE::print(F("\n"), output);
+
+    if (!plaintext)BRIDGE::print(F("\"display\":\""), output);
+    else BRIDGE::print(F("Display: "), output);
+#ifdef DISPLAY_SSD1306
+    BRIDGE::print(F("SSD1306"), output);
 #else
     BRIDGE::print(F("Disabled"), output);
 #endif

@@ -42,7 +42,6 @@
 #define ENC_TYPE_NONE AUTH_OPEN
 #define FS_FILE File
 #define FS_DIR File
-#define ESP_SERIAL_OUT Serial
 #define SD_FILE_READ FILE_READ
 #define SPIFFS_FILE_READ FILE_READ
 #define SD_FILE_WRITE FILE_WRITE
@@ -50,7 +49,6 @@
 #else
 #define FS_DIR fs::Dir
 #define FS_FILE fs::File
-#define ESP_SERIAL_OUT Serial
 #define SD_FILE_READ FILE_READ
 #define SPIFFS_FILE_READ "r"
 #define SD_FILE_WRITE FILE_WRITE
@@ -58,6 +56,12 @@
 #endif
 
 #define MAX_FW_ID REPETIER
+
+//load board definition
+//#include "boards/generic.h"
+//#include "boards/wf3d.h"
+#include "boards/wf3d_with_ssd1306.h"
+
 
 //number of clients allowed to use data port at once
 #define MAX_SRV_CLIENTS 1
@@ -96,14 +100,6 @@
 
 //TCP_IP_DATA_FEATURE: allow to connect serial from TCP/IP
 #define TCP_IP_DATA_FEATURE
-
-//RECOVERY_FEATURE: allow to use GPIO2 pin as hardware reset for EEPROM, add 8s to boot time to let user to jump GPIO2 to GND
-//#define RECOVERY_FEATURE
-
-#ifdef RECOVERY_FEATURE
-//pin used to reset setting
-#define RESET_CONFIG_PIN 2
-#endif
 
 //DIRECT_PIN_FEATURE: allow to access pin using ESP201 command
 #define DIRECT_PIN_FEATURE
@@ -158,7 +154,7 @@
 #define LOG(string) { FS_FILE logfile = SPIFFS.open("/log.txt", "a+");logfile.print(string);logfile.close();}
 #endif
 #ifdef DEBUG_OUTPUT_SERIAL
-#define LOG(string) {ESP_SERIAL_OUT.print(string);}
+#define LOG(string) {Board::printerPort.print(string);}
 #define DEBUG_PIPE SERIAL_PIPE
 #endif
 #ifdef DEBUG_OUTPUT_TCP
@@ -276,7 +272,6 @@ const byte DEFAULT_IP_VALUE[]   =	        {192, 168, 0, 1};
 const byte DEFAULT_MASK_VALUE[]  =	        {255, 255, 255, 0};
 #define DEFAULT_GATEWAY_VALUE   	        DEFAULT_IP_VALUE
 const long DEFAULT_BAUD_RATE =			115200;
-const char M117_[] PROGMEM =		"M117 ";
 #define DEFAULT_PHY_MODE			WIFI_PHY_MODE_11G
 #define DEFAULT_SLEEP_MODE			WIFI_MODEM_SLEEP
 #define DEFAULT_CHANNEL				11
@@ -406,7 +401,6 @@ public:
     static bool SetFirmwareTarget(uint8_t fw);
     static void InitFirmwareTarget();
     static void InitDirectSD();
-    static void InitPins();
     static bool InitBaudrate();
     static bool InitExternalPorts();
     static bool check_update_presence();

@@ -28,6 +28,7 @@
 #error Oops!  Make sure you have 'ESP8266 or ESP32' compatible board selected from the 'Tools -> Boards' menu.
 #endif
 #include <EEPROM.h>
+#include "board.h"
 #include "config.h"
 #include "wificonf.h"
 #include "bridge.h"
@@ -85,23 +86,23 @@ void setup()
     data_server = NULL;
 #endif
     // init:
+    Board::init();
+    if (Board::pPrinterPortSwitch != NULL)
+    {
+        // If there is serial port switch, turn it on
+        Board::pPrinterPortSwitch->on();
+    }
+
 #ifdef DEBUG_ESP3D
-    if (ESP_SERIAL_OUT.baudRate() != DEFAULT_BAUD_RATE)ESP_SERIAL_OUT.begin(DEFAULT_BAUD_RATE);
+    if (Board::printerPort.baudRate() != DEFAULT_BAUD_RATE)Board::printerPort.begin(DEFAULT_BAUD_RATE);
     delay(2000);
     LOG("\r\nDebug Serial set\r\n")
 #endif
     //WiFi.disconnect();
-    WiFi.mode(WIFI_OFF);
+/*TODO:WF3D_EEPROM*/    WiFi.mode(WIFI_OFF);
     delay(8000);
     CONFIG::InitDirectSD();
-    CONFIG::InitPins();
-#ifdef RECOVERY_FEATURE
-    delay(8000);
-    //check if reset config is requested
-    if (digitalRead(RESET_CONFIG_PIN)==0) {
-        breset_config=true;    //if requested =>reset settings
-    }
-#endif
+
     //check if EEPROM has value
     if (  !CONFIG::InitBaudrate() || !CONFIG::InitExternalPorts()) {
         breset_config=true;    //cannot access to config settings=> reset settings
@@ -111,12 +112,12 @@ void setup()
     //reset is requested
     if(breset_config) {
         //update EEPROM with default settings
-        if (ESP_SERIAL_OUT.baudRate() != DEFAULT_BAUD_RATE)ESP_SERIAL_OUT.begin(DEFAULT_BAUD_RATE);
+        if (Board::printerPort.baudRate() != DEFAULT_BAUD_RATE)Board::printerPort.begin(DEFAULT_BAUD_RATE);
 #ifdef ARDUINO_ARCH_ESP8266
-        ESP_SERIAL_OUT.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
+        Board::printerPort.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
 #endif
         delay(2000);
-        ESP_SERIAL_OUT.println(F("M117 ESP EEPROM reset"));
+        Board::status.print(F("ESP EEPROM reset"));
 #ifdef DEBUG_ESP3D
         CONFIG::print_config(DEBUG_PIPE, true);
         delay(1000);
@@ -124,18 +125,18 @@ void setup()
         CONFIG::reset_config();
         delay(1000);
         //put some default value to a void some exception at first start
-        WiFi.mode(WIFI_AP);
+/*TODO:WF3D_EEPROM*/        WiFi.mode(WIFI_AP);
 #ifdef ARDUINO_ARCH_ESP8266
-        WiFi.setPhyMode(WIFI_PHY_MODE_11G);
+/*TODO:WF3D_EEPROM*/        WiFi.setPhyMode(WIFI_PHY_MODE_11G);
 #else 
-	esp_wifi_set_protocol(ESP_IF_WIFI_AP, WIFI_PHY_MODE_11G);
+/*TODO:WF3D_EEPROM*/	esp_wifi_set_protocol(ESP_IF_WIFI_AP, WIFI_PHY_MODE_11G);
 #endif
         CONFIG::esp_restart();
     }
 #if defined(DEBUG_ESP3D) && defined(DEBUG_OUTPUT_SERIAL)
     LOG("\r\n");
     delay(500);
-    ESP_SERIAL_OUT.flush();
+    Board::printerPort.flush();
 #endif
     //get target FW
     CONFIG::InitFirmwareTarget();
@@ -148,22 +149,22 @@ void setup()
        
     //setup wifi according settings
     if (!wifi_config.Setup()) {
-        ESP_SERIAL_OUT.println(F("M117 Safe mode 1"));
+        Board::status.print(F("Safe mode 1"));
         //try again in AP mode
        if (!wifi_config.Setup(true)) {
-            ESP_SERIAL_OUT.println(F("M117 Safe mode 2"));
+            Board::status.print(F("Safe mode 2"));
             wifi_config.Safe_Setup();
         }
     }
     delay(1000);
     //setup servers
     if (!wifi_config.Enable_servers()) {
-        ESP_SERIAL_OUT.println(F("M117 Error enabling servers"));
+        Board::status.print(F("Error enabling servers"));
     }
     LOG("Setup Done\r\n");
+
+    Board::status.print(F("Ready"));
 }
-
-
 
 //main loop
 void loop()
@@ -186,4 +187,6 @@ void loop()
     if (web_interface->restartmodule) {
         CONFIG::esp_restart();
     }
+
+    Board::update();
 }
