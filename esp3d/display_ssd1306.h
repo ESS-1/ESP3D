@@ -106,12 +106,17 @@ public:
         register bool hasChanged = (_icon != icon);
         _icon = icon;
 
-        for (int i = 0; i < SSD1306_CHARS_PER_LINE-1 && s[i] != NULL; ++i)
+        for (int i = 0; i < SSD1306_CHARS_PER_LINE-1; ++i)
         {
             if (s[i] != _summary[i])
             {
                 _summary[i] = s[i];
                 hasChanged = true;
+            }
+
+            if (s[i] == NULL)
+            {
+                break;
             }
         }
 
@@ -122,7 +127,7 @@ public:
     virtual void print(const char *s)
     {
         bool skipNextIfPercent = false;
-        for (int i = 0; i < SSD1306_CHARS_PER_LINE-1 && s[i] != NULL; ++i)
+        for (int i = 0; i < SSD1306_CHARS_PER_LINE-1; ++i)
         {
             register char c = s[i];
 
@@ -135,6 +140,10 @@ public:
             skipNextIfPercent = (c == '%');
 
             _log[_line_idx][i] = c;
+            if (c == NULL)
+            {
+                break;
+            }
         }
 
         refresh();
