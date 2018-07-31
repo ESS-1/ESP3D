@@ -654,7 +654,7 @@ void WebUpdateUpload()
             if ( ((100 * upload.totalSize) / maxSketchSpace) !=last_upload_update) {
                 last_upload_update = (100 * upload.totalSize) / maxSketchSpace;
                 bool escapePercent = ( CONFIG::GetFirmwareTarget() == REPETIER4DV) || (CONFIG::GetFirmwareTarget() == REPETIER);
-                Board::status.printOver(String(F("Update ")) + last_upload_update + escapePercent?F("%%"):F("%"));
+                Board::status.printOver(String(F("Update ")) + last_upload_update + (escapePercent?F("%%"):F("%")));
             }
             if(Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
                 web_interface->_upload_status=UPLOAD_STATUS_CANCELLED;

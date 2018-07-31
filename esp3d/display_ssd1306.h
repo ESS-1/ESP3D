@@ -79,6 +79,36 @@ private:
         }
     }
 
+    bool updateLine(const char * src, char dst[SSD1306_CHARS_PER_LINE])
+    {
+        bool changed = false;
+        bool skipNextIfPercent = false;
+
+        for (int i = 0; i < SSD1306_CHARS_PER_LINE-1; ++i, ++src)
+        {
+            // Unescape '%%'
+            if (skipNextIfPercent && *src == '%')
+            {
+                skipNextIfPercent = false;
+                ++src;
+            }
+            skipNextIfPercent = (*src == '%');
+
+            if (*src != dst[i])
+            {
+                dst[i] = *src;
+                changed = true;
+            }
+
+            if (*src == NULL)
+            {
+                break;
+            }
+        }
+
+        return changed;
+    }
+
 public:
     DisplaySSD1306(uint8_t address, uint8_t sda, uint8_t scl)
     : _display(address, sda, scl),
@@ -106,47 +136,17 @@ public:
         register bool hasChanged = (_icon != icon);
         _icon = icon;
 
-        for (int i = 0; i < SSD1306_CHARS_PER_LINE-1; ++i)
-        {
-            if (s[i] != _summary[i])
-            {
-                _summary[i] = s[i];
-                hasChanged = true;
-            }
-
-            if (s[i] == NULL)
-            {
-                break;
-            }
-        }
-
+        hasChanged |= updateLine(s, _summary);
         if (hasChanged)
             refresh();
     }
 
     virtual void print(const char *s)
     {
-        bool skipNextIfPercent = false;
-        for (int i = 0; i < SSD1306_CHARS_PER_LINE-1; ++i)
+        if (updateLine(s, _log[_line_idx]))
         {
-            register char c = s[i];
-
-            // Unescape '%%'
-            if (skipNextIfPercent && c == '%')
-            {
-                skipNextIfPercent = false;
-                continue;
-            }
-            skipNextIfPercent = (c == '%');
-
-            _log[_line_idx][i] = c;
-            if (c == NULL)
-            {
-                break;
-            }
+            refresh();
         }
-
-        refresh();
     }
 
     virtual void newLine()
