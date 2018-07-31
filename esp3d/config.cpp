@@ -1013,8 +1013,8 @@ bool CONFIG::check_update_presence( ){
          if (CONFIG::FirmwareTarget == SMOOTHIEWARE) {
              byte sd_dir = 0;
              if (!CONFIG::read_byte(EP_PRIMARY_SD, &sd_dir )) sd_dir = DEFAULT_PRIMARY_SD;
-             if (sd_dir == SD_DIRECTORY) cmd = "ls /sd";
-             else if (sd_dir == EXT_DIRECTORY) cmd = "ls /ext";
+             if (sd_dir == SD_DIRECTORY) cmd = F("ls /sd");
+             else if (sd_dir == EXT_DIRECTORY) cmd = F("ls /ext");
              else return false;
          }
         String tmp;

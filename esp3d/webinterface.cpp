@@ -70,7 +70,7 @@ const char CONTENT_TYPE_HTML [] PROGMEM ="text/html";
 
 void handle_web_interface_root()
 {
-    String path = "/index.html";
+    String path = F("/index.html");
     String contentType =  web_interface->getContentType(path);
     String pathWithGz = path + ".gz";
     //if have a index.html or gzip version this is default root page
@@ -84,7 +84,7 @@ void handle_web_interface_root()
         return;
     }
     //if no lets launch the default content
-    web_interface->web_server.sendHeader("Content-Encoding", "gzip");
+    web_interface->web_server.sendHeader(F("Content-Encoding"), F("gzip"));
     web_interface->web_server.send_P(200,CONTENT_TYPE_HTML,PAGE_NOFILES,PAGE_NOFILES_SIZE);
 }
 
@@ -141,7 +141,7 @@ void handle_web_interface_status()
     buffer2send+="],";
 #endif
     //status color
-    buffer2send+="\"status\":\""+value +"\"";
+    buffer2send+=String(F("\"status\":\""))+value +"\"";
     buffer2send+="}";
     web_interface->web_server.sendHeader("Cache-Control", "no-cache");
     web_interface->web_server.send(200, "application/json",buffer2send);
@@ -184,7 +184,7 @@ void SPIFFSFileupload()
         if(auth_level == LEVEL_ADMIN) {
             filename = upload.filename;
         } else {
-            filename = "/user" + upload.filename;
+            filename = String(F("/user")) + upload.filename;
         }
         Board::status.print(F("Start ESP upload"));
         //create file
@@ -682,10 +682,10 @@ void handleUpdate()
     level_authenticate_type auth_level = web_interface->is_authenticated();
     if (auth_level != LEVEL_ADMIN) {
 		web_interface->_upload_status=UPLOAD_STATUS_NONE;
-        web_interface->web_server.send(403,"text/plain","Not allowed, log in first!\n");
+        web_interface->web_server.send(403, "text/plain", F("Not allowed, log in first!\n"));
         return;
     }
-    String jsonfile = "{\"status\":\"" ;
+    String jsonfile = F("{\"status\":\"");
     jsonfile+=CONFIG::intTostr(web_interface->_upload_status);
     jsonfile+="\"}";
     //send status
@@ -706,19 +706,19 @@ void handleFileList()
     level_authenticate_type auth_level = web_interface->is_authenticated();
     if (auth_level == LEVEL_GUEST) {
         web_interface->_upload_status=UPLOAD_STATUS_NONE;
-        web_interface->web_server.send(401,"text/plain","Authentication failed!\n");
+        web_interface->web_server.send(401, "text/plain", F("Authentication failed!\n"));
         return;
     }
     String path ;
     String status = "Ok";
     if ((web_interface->_upload_status == UPLOAD_STATUS_FAILED) || (web_interface->_upload_status == UPLOAD_STATUS_CANCELLED)) {
-        status = "Upload failed";
+        status = F("Upload failed");
     }
     //be sure root is correct according authentication
     if (auth_level == LEVEL_ADMIN) {
         path = "/";
     } else {
-        path = "/user";
+        path = F("/user");
     }
     //get current path
     if(web_interface->web_server.hasArg("path")) {
@@ -804,7 +804,7 @@ void handleFileList()
                 }
                 if (!delete_error) {
                     status = shortname ;
-                    status+=" deleted";
+                    status+=F(" deleted");
                 }
             }
         }
@@ -837,7 +837,7 @@ void handleFileList()
 	if ((path != "/") && (path[path.length()-1]='/'))ptmp = path.substring(0,path.length()-1);
 	FS_FILE dir = SPIFFS.open(ptmp);
 #endif
-    jsonfile+="\"files\":[";
+    jsonfile+=F("\"files\":[");
     bool firstentry=true;
     String subdirlist="";
 #ifdef ARDUINO_ARCH_ESP8266
@@ -889,9 +889,9 @@ void handleFileList()
                 firstentry=false;
             }
             jsonfile+="{";
-            jsonfile+="\"name\":\"";
+            jsonfile+=F("\"name\":\"");
             jsonfile+=filename;
-            jsonfile+="\",\"size\":\"";
+            jsonfile+=F("\",\"size\":\"");
             jsonfile+=size;
             jsonfile+="\"";
             jsonfile+="}";
@@ -901,8 +901,8 @@ void handleFileList()
 #endif
     }
     jsonfile+="],";
-    jsonfile+="\"path\":\"" + path + "\",";
-    jsonfile+="\"status\":\"" + status + "\",";
+    jsonfile+=String(F("\"path\":\"")) + path + "\",";
+    jsonfile+=String(F("\"status\":\"")) + status + "\",";
     size_t totalBytes;
     size_t usedBytes;
 #ifdef ARDUINO_ARCH_ESP8266
@@ -914,8 +914,8 @@ void handleFileList()
 	totalBytes = SPIFFS.totalBytes();
     usedBytes = SPIFFS.usedBytes();
 #endif
-    jsonfile+="\"total\":\"" + CONFIG::formatBytes(totalBytes) + "\",";
-    jsonfile+="\"used\":\"" + CONFIG::formatBytes(usedBytes) + "\",";
+    jsonfile+=String(F("\"total\":\"")) + CONFIG::formatBytes(totalBytes) + "\",";
+    jsonfile+=String(F("\"used\":\"")) + CONFIG::formatBytes(usedBytes) + "\",";
     jsonfile.concat(F("\"occupation\":\""));
     jsonfile+= CONFIG::intTostr(100*usedBytes/totalBytes);
     jsonfile+="\"";
@@ -933,16 +933,16 @@ void handle_serial_SDFileList()
     if (web_interface->is_authenticated() == LEVEL_GUEST) {
         web_interface->_upload_status=UPLOAD_STATUS_NONE;
         web_interface->web_server.sendHeader("Cache-Control", "no-cache");
-        web_interface->web_server.send(401, "application/json", "{\"status\":\"Authentication failed!\"}");
+        web_interface->web_server.send(401, "application/json", F("{\"status\":\"Authentication failed!\"}"));
         return;
     }
     LOG("serial SD upload done\r\n")
     String sstatus="Ok";
     if ((web_interface->_upload_status == UPLOAD_STATUS_FAILED) || (web_interface->_upload_status == UPLOAD_STATUS_CANCELLED)) {
-        sstatus = "Upload failed";
+        sstatus = F("Upload failed");
         web_interface->_upload_status = UPLOAD_STATUS_NONE;
     }
-    String jsonfile = "{\"status\":\"" + sstatus + "\"}";
+    String jsonfile = String(F("{\"status\":\"")) + sstatus + "\"}";
     web_interface->web_server.sendHeader("Cache-Control", "no-cache");
     web_interface->web_server.send(200, "application/json", jsonfile);
     web_interface->blockserial = false;
@@ -1067,9 +1067,9 @@ void handle_login()
             sessionID = cookie.substring(pos+strlen("ESPSESSIONID="),pos2);
             }
         web_interface->ClearAuthIP(web_interface->web_server.client().remoteIP(), sessionID.c_str());
-        web_interface->web_server.sendHeader("Set-Cookie","ESPSESSIONID=0");
+        web_interface->web_server.sendHeader(F("Set-Cookie"), F("ESPSESSIONID=0"));
         web_interface->web_server.sendHeader("Cache-Control","no-cache");
-        String buffer2send = "{\"status\":\"Ok\",\"authentication_lvl\":\"guest\"}";
+        String buffer2send = F("{\"status\":\"Ok\",\"authentication_lvl\":\"guest\"}");
         web_interface->web_server.send(code, "application/json", buffer2send);
         //web_interface->web_server.client().stop();
         return;
@@ -1157,17 +1157,17 @@ void handle_login()
             if (web_interface->AddAuthIP(current_auth)) {
                 String tmps ="ESPSESSIONID="; 
                 tmps+=current_auth->sessionID;
-                web_interface->web_server.sendHeader("Set-Cookie",tmps);
+                web_interface->web_server.sendHeader(F("Set-Cookie"), tmps);
                 web_interface->web_server.sendHeader("Cache-Control","no-cache");
                 switch(current_auth->level) {
                     case LEVEL_ADMIN:
-                        auths = "admin";
+                        auths = F("admin");
                         break;
                      case LEVEL_USER:
-                        auths = "user";
+                        auths = F("user");
                         break;
                     default:
-                        auths = "guest";
+                        auths = F("guest");
                     }
             } else {
                 delete current_auth;
@@ -1180,7 +1180,7 @@ void handle_login()
     if (code == 200) smsg = F("Ok");
     
     //build  JSON
-    String buffer2send = "{\"status\":\"" + smsg + "\",\"authentication_lvl\":\"";
+    String buffer2send = String(F("{\"status\":\"")) + smsg + F("\",\"authentication_lvl\":\"");
     buffer2send += auths;
     buffer2send += "\"}";
     web_interface->web_server.send(code, "application/json", buffer2send);
@@ -1198,9 +1198,9 @@ void handle_login()
                 }
         }
     }
-    String buffer2send = "{\"status\":\"200\",\"authentication_lvl\":\"";
+    String buffer2send = F("{\"status\":\"200\",\"authentication_lvl\":\"");
     buffer2send += auths;
-    buffer2send += "\",\"user\":\"";
+    buffer2send += F("\",\"user\":\"");
     buffer2send += sUser;
     buffer2send +="\"}";
     web_interface->web_server.send(code, "application/json", buffer2send);
@@ -1242,7 +1242,7 @@ void handle_web_command()
         LOG("\r\n")
     } else {
         LOG("invalid argument\r\n")
-        web_interface->web_server.send(200,"text/plain","Invalid command");
+        web_interface->web_server.send(200, "text/plain", F("Invalid command"));
         return;
     }
     //if it is for ESP module [ESPXXX]<parameter>
@@ -1257,7 +1257,7 @@ void handle_web_command()
             String cmd_part2="";
             //only [ESP800] is allowed login free if authentication is enabled
              if ((auth_level == LEVEL_GUEST)  && (cmd_part1.toInt()!=800)) {
-                web_interface->web_server.send(401,"text/plain","Authentication failed!\n");
+                web_interface->web_server.send(401, "text/plain", F("Authentication failed!\n"));
                 return;
             }
             //is there space for parameters?
@@ -1273,7 +1273,7 @@ void handle_web_command()
         }
     } else {
          if (auth_level == LEVEL_GUEST) {
-        web_interface->web_server.send(401,"text/plain","Authentication failed!\n");
+        web_interface->web_server.send(401, "text/plain", F("Authentication failed!\n"));
         return;
     }
         //send command to serial as no need to transfer ESP command
@@ -1391,7 +1391,7 @@ void handle_web_command()
                 datasent = true;
             }
             if (!datasent) {
-                web_interface->web_server.sendContent(" \r\n");
+                web_interface->web_server.sendContent(F(" \r\n"));
             }
             web_interface->web_server.sendContent("");
             LOG("Start PurgeSerial\r\n")
@@ -1403,7 +1403,7 @@ void handle_web_command()
             web_interface->blockserial = false;
             LOG("Release Serial\r\n")
         } else {
-            web_interface->web_server.send(200,"text/plain","Serial is busy, retry later!");
+            web_interface->web_server.send(200, "text/plain", F("Serial is busy, retry later!"));
         }
     }
 }
@@ -1413,7 +1413,7 @@ void handle_web_command_silent()
 {
     level_authenticate_type auth_level= web_interface->is_authenticated();
     if (auth_level == LEVEL_GUEST) {
-        web_interface->web_server.send(401,"text/plain","Authentication failed!\n");
+        web_interface->web_server.send(401, "text/plain", F("Authentication failed!\n"));
         return;
     }
     String buffer2send = "";
@@ -1441,7 +1441,7 @@ void handle_web_command_silent()
         LOG("\r\n")
     } else {
         LOG("invalid argument\r\n")
-        web_interface->web_server.send(200,"text/plain","Invalid command");
+        web_interface->web_server.send(200, "text/plain", F("Invalid command"));
         return;
     }
     //if it is for ESP module [ESPXXX]<parameter>
@@ -1463,7 +1463,7 @@ void handle_web_command_silent()
                 if (COMMAND::execute_command(cmd_part1.toInt(),cmd_part2,NO_PIPE, auth_level)) {
                     web_interface->web_server.send(200,"text/plain","ok");
                 } else {
-                    web_interface->web_server.send(500,"text/plain","error");
+                    web_interface->web_server.send(500, "text/plain", F("error"));
                 }
 
             }
@@ -1478,7 +1478,7 @@ void handle_web_command_silent()
             Board::printerPort.println(cmd);
             web_interface->web_server.send(200,"text/plain","ok");
         } else {
-            web_interface->web_server.send(200,"text/plain","Serial is busy, retry later!");
+            web_interface->web_server.send(200, "text/plain", F("Serial is busy, retry later!"));
         }
     }
 
@@ -1496,26 +1496,26 @@ WEBINTERFACE_CLASS::WEBINTERFACE_CLASS (int port):web_server(port)
 {
     //init what will handle "/"
     web_server.on("/",HTTP_ANY, handle_web_interface_root);
-    web_server.on("/command",HTTP_ANY, handle_web_command);
-    web_server.on("/command_silent",HTTP_ANY, handle_web_command_silent);
-    web_server.on("/upload_serial", HTTP_ANY, handle_serial_SDFileList,SDFile_serial_upload);
-    web_server.on("/files", HTTP_ANY, handleFileList,SPIFFSFileupload);
+    web_server.on(F("/command"),HTTP_ANY, handle_web_command);
+    web_server.on(F("/command_silent"), HTTP_ANY, handle_web_command_silent);
+    web_server.on(F("/upload_serial"), HTTP_ANY, handle_serial_SDFileList, SDFile_serial_upload);
+    web_server.on(F("/files"), HTTP_ANY, handleFileList, SPIFFSFileupload);
 #ifdef WEB_UPDATE_FEATURE
-    web_server.on("/updatefw",HTTP_ANY, handleUpdate,WebUpdateUpload);
+    web_server.on(F("/updatefw"), HTTP_ANY, handleUpdate, WebUpdateUpload);
 #endif
 #ifdef AUTHENTICATION_FEATURE
-    web_server.on("/login", HTTP_ANY, handle_login);
+    web_server.on(F("/login"), HTTP_ANY, handle_login);
 #endif
     //TODO: to be reviewed
-    web_server.on("/STATUS",HTTP_ANY, handle_web_interface_status);
+    web_server.on(F("/STATUS"), HTTP_ANY, handle_web_interface_status);
 #ifdef SSDP_FEATURE
-    web_server.on("/description.xml", HTTP_GET, handle_SSDP);
+    web_server.on(F("/description.xml"), HTTP_GET, handle_SSDP);
 #endif
 #ifdef CAPTIVE_PORTAL_FEATURE
-    web_server.on("/generate_204",HTTP_ANY, handle_web_interface_root);
-    web_server.on("/gconnectivitycheck.gstatic.com",HTTP_ANY, handle_web_interface_root);
+    web_server.on(F("/generate_204"), HTTP_ANY, handle_web_interface_root);
+    web_server.on(F("/gconnectivitycheck.gstatic.com"), HTTP_ANY, handle_web_interface_root);
     //do not forget the / at the end 
-    web_server.on("/fwlink/",HTTP_ANY, handle_web_interface_root);
+    web_server.on(F("/fwlink/"), HTTP_ANY, handle_web_interface_root);
 #endif
     web_server.onNotFound( handle_not_found);
     blockserial = false;
@@ -1704,27 +1704,27 @@ String WEBINTERFACE_CLASS::getContentType(const String & filename)
     } else if(filename.endsWith(".html")) {
         return "text/html";
     } else if(filename.endsWith(".css")) {
-        return "text/css";
+        return F("text/css");
     } else if(filename.endsWith(".js")) {
-        return "application/javascript";
+        return F("application/javascript");
     } else if(filename.endsWith(".png")) {
-        return "image/png";
+        return F("image/png");
     } else if(filename.endsWith(".gif")) {
-        return "image/gif";
+        return F("image/gif");
     } else if(filename.endsWith(".jpeg")) {
-        return "image/jpeg";
+        return F("image/jpeg");
     } else if(filename.endsWith(".jpg")) {
-        return "image/jpeg";
+        return F("image/jpeg");
     } else if(filename.endsWith(".ico")) {
-        return "image/x-icon";
+        return F("image/x-icon");
     } else if(filename.endsWith(".xml")) {
-        return "text/xml";
+        return F("text/xml");
     } else if(filename.endsWith(".pdf")) {
-        return "application/x-pdf";
+        return F("application/x-pdf");
     } else if(filename.endsWith(".zip")) {
-        return "application/x-zip";
+        return F("application/x-zip");
     } else if(filename.endsWith(".gz")) {
-        return "application/x-gzip";
+        return F("application/x-gzip");
     } else if(filename.endsWith(".tpl")) {
         return "text/plain";
     } else if(filename.endsWith(".inc")) {
@@ -1732,7 +1732,7 @@ String WEBINTERFACE_CLASS::getContentType(const String & filename)
     } else if(filename.endsWith(".txt")) {
         return "text/plain";
     }
-    return "application/octet-stream";
+    return F("application/octet-stream");
 }
 
 

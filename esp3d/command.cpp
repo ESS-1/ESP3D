@@ -1438,28 +1438,28 @@ bool COMMAND::check_command(const String & buffer, tpipe output, bool handlelock
 #endif
 if (CONFIG::GetFirmwareTarget()  == SMOOTHIEWARE) {
 #ifdef ERROR_MSG_FEATURE
-        Errorpos= buffer.indexOf("error:");
+        Errorpos= buffer.indexOf(F("error:"));
 #endif
 #ifdef INFO_MSG_FEATURE
-        Infopos= buffer.indexOf("info:");
+        Infopos= buffer.indexOf(F("info:"));
 #endif
 #ifdef STATUS_MSG_FEATURE
-        Statuspos= buffer.indexOf("warning:");
+        Statuspos= buffer.indexOf(F("warning:"));
 #endif
 } else {
 #ifdef ERROR_MSG_FEATURE
-        Errorpos= buffer.indexOf("Error:");
+        Errorpos= buffer.indexOf(F("Error:"));
 #endif
 #ifdef INFO_MSG_FEATURE
-        Infopos= buffer.indexOf("Info:");
+        Infopos= buffer.indexOf(F("Info:"));
 #endif
 #ifdef STATUS_MSG_FEATURE
     Statuspos= -1;
     if (CONFIG::GetFirmwareTarget()  == MARLIN){
-        Statuspos= buffer.indexOf("echo:");
+        Statuspos= buffer.indexOf(F("echo:"));
     }
     else {
-        Statuspos= buffer.indexOf("Status:");
+        Statuspos= buffer.indexOf(F("Status:"));
     }
 
 #endif
@@ -1489,7 +1489,7 @@ if (CONFIG::GetFirmwareTarget()  == SMOOTHIEWARE) {
 #endif
 #ifdef ERROR_MSG_FEATURE
         //Error
-        if (Errorpos>-1 && !(buffer.indexOf("Format error")!=-1 || buffer.indexOf("wait")==Errorpos+6) ) {
+        if (Errorpos>-1 && !(buffer.indexOf(F("Format error"))!=-1 || buffer.indexOf("wait")==Errorpos+6) ) {
             String ss = buffer.substring(Errorpos+6);
             ss.replace("\"","");
             ss.replace("'","");

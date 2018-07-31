@@ -455,18 +455,18 @@ bool WIFI_CONFIG::Enable_servers()
 #endif
 #ifdef SSDP_FEATURE
     String stmp;
-    SSDP.setSchemaURL("description.xml");
+    SSDP.setSchemaURL(F("description.xml"));
     SSDP.setHTTPPort( wifi_config.iweb_port);
     SSDP.setName(shost.c_str());
     stmp=String(ESP.getChipId());
     SSDP.setSerialNumber(stmp.c_str());
-    SSDP.setURL("/");
-    SSDP.setModelName("ESP8266 01");
-    SSDP.setModelNumber("01");
-    SSDP.setModelURL("http://espressif.com/en/products/esp8266/");
-    SSDP.setManufacturer("Espressif Systems");
-    SSDP.setManufacturerURL("http://espressif.com");
-    SSDP.setDeviceType("upnp:rootdevice");
+    SSDP.setURL(F("/"));
+    SSDP.setModelName(F("ESP8266 01"));
+    SSDP.setModelNumber(F("01"));
+    SSDP.setModelURL(F("http://espressif.com/en/products/esp8266/"));
+    SSDP.setManufacturer(F("Espressif Systems"));
+    SSDP.setManufacturerURL(F("http://espressif.com"));
+    SSDP.setDeviceType(F("upnp:rootdevice"));
     if (WiFi.getMode()!=WIFI_AP )SSDP.begin();
 #endif
 #ifdef NETBIOS_FEATURE
