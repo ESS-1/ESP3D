@@ -361,7 +361,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
                  if (WiFi.getMode() !=WIFI_OFF) {
                      //disable wifi
                      Board::status.print(F("Disabling Wifi"));
-/*TODO:WF3D_EEPROM*/                     WiFi.mode(WIFI_OFF);
+                     WiFi.mode(WIFI_OFF);
                      wifi_config.Disable_servers();
                      return response;
                  } else BRIDGE::printStatus(F("Wifi already off"), output);
@@ -1125,7 +1125,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
     //[ESP410]<plain>
     case 410: {
 		parameter = get_param(cmd_params,"", true);
-/*TODO:WF3D_EEPROM*/		int n = WiFi.scanNetworks();
+		int n = WiFi.scanNetworks();
 		bool plain = parameter == "plain";
         if (!plain)BRIDGE::print(F("{\"AP_LIST\":["), output);
         for (int i = 0; i < n; ++i) {
@@ -1151,7 +1151,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             }
         if (!plain)BRIDGE::print(F("]}"), output);
         else BRIDGE::print(F("\n"), output);
-/*TODO:WF3D_EEPROM*/        WiFi.scanDelete();
+        WiFi.scanDelete();
 	}
 	break;
 	//Get ESP current status in plain or JSON
