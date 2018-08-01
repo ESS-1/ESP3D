@@ -11,8 +11,12 @@
 
 #include "board.h"
 #include "config.h"
-#include <ESP8266WiFi.h>
 
+#ifdef ARDUINO_ARCH_ESP8266
+    #include <ESP8266WiFi.h>
+#else
+    #include <WiFi.h>
+#endif
 
 // StatusController
 const char M117_[] PROGMEM = "M117 ";
