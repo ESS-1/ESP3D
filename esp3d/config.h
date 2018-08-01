@@ -57,6 +57,7 @@
 
 #define MAX_FW_ID REPETIER
 
+
 //load board definition
 //#include "boards/generic.h"
 //#include "boards/wf3d.h"
@@ -102,6 +103,8 @@
 #define TCP_IP_DATA_FEATURE
 
 //DIRECT_PIN_FEATURE: allow to access pin using ESP201 command
+//only those pins which are not used in the bord configuration file
+//are available for direct I/O
 #define DIRECT_PIN_FEATURE
 
 //INFO_MSG_FEATURE: catch the Info msg and filter it to specific table
