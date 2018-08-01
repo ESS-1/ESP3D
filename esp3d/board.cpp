@@ -163,7 +163,7 @@ StatusController Board::status = StatusController();
 
 #ifdef PIN_IN_SETTINGS_RESET
     HOLDBUTTON_DECLARE_ISR(PIN_IN_SETTINGS_RESET)
-    HoldButton cResetButton(HOLDBUTTON_ISR(PIN_IN_SETTINGS_RESET), Board::resetSettings, 5000);
+    HoldButton cResetButton(HOLDBUTTON_ISR(PIN_IN_SETTINGS_RESET), Board::resetSettings, 10000);
     HoldButton* const Board::pResetButton = &cResetButton;
 #else
     HoldButton* const Board::pResetButton = NULL;
