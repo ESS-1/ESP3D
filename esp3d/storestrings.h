@@ -32,7 +32,7 @@ public:
     {
         return add(string.c_str());
     };
-    bool add (const __FlashStringHelper *str);
+
     bool remove(int pos);
     const char * get(int pos);
     int get_index(const char * string);

@@ -64,12 +64,6 @@ void STORESTRINGS_CLASS::clear()
     }
 }
 
-bool STORESTRINGS_CLASS::add (const __FlashStringHelper *str)
-{
-    String stmp;
-    stmp=str;
-    return add(stmp.c_str());
-}
 //Add element in storage
 bool STORESTRINGS_CLASS::add (const char * string)
 {
