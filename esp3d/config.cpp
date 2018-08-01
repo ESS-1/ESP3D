@@ -1177,6 +1177,9 @@ bool CONFIG::write_byte(int pos, const byte value)
 
 bool CONFIG::reset_config()
 {
+    // Reset persistent WiFi settings
+    system_restore();
+
     if(!CONFIG::write_string(EP_DATA_STRING,"")) {
         return false;
     }

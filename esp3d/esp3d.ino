@@ -79,6 +79,9 @@ extern DNSServer dnsServer;
 
 void setup()
 {
+    // Do not save WiFi configuration to the flash
+    WiFi.persistent(false);
+
     bool breset_config=false;
     bool directsd_check = false;
     web_interface = NULL;
@@ -99,7 +102,7 @@ void setup()
     LOG("\r\nDebug Serial set\r\n")
 #endif
     //WiFi.disconnect();
-/*TODO:WF3D_EEPROM*/    WiFi.mode(WIFI_OFF);
+    WiFi.mode(WIFI_OFF);
     delay(8000);
     CONFIG::InitDirectSD();
 
@@ -124,13 +127,6 @@ void setup()
 #endif
         CONFIG::reset_config();
         delay(1000);
-        //put some default value to a void some exception at first start
-/*TODO:WF3D_EEPROM*/        WiFi.mode(WIFI_AP);
-#ifdef ARDUINO_ARCH_ESP8266
-/*TODO:WF3D_EEPROM*/        WiFi.setPhyMode(WIFI_PHY_MODE_11G);
-#else 
-/*TODO:WF3D_EEPROM*/	esp_wifi_set_protocol(ESP_IF_WIFI_AP, WIFI_PHY_MODE_11G);
-#endif
         CONFIG::esp_restart();
     }
 #if defined(DEBUG_ESP3D) && defined(DEBUG_OUTPUT_SERIAL)

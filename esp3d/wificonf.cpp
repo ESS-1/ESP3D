@@ -122,17 +122,17 @@ void  WIFI_CONFIG::Safe_Setup()
     delay(100);
 #endif
 
-/*TODO:WF3D_EEPROM*/    WiFi.disconnect();
+    WiFi.disconnect();
     //setup Soft AP
-/*TODO:WF3D_EEPROM*/    WiFi.mode(WIFI_AP);
+    WiFi.mode(WIFI_AP);
     IPAddress local_ip (DEFAULT_IP_VALUE[0],DEFAULT_IP_VALUE[1],DEFAULT_IP_VALUE[2],DEFAULT_IP_VALUE[3]);
     IPAddress gateway (DEFAULT_GATEWAY_VALUE[0],DEFAULT_GATEWAY_VALUE[1],DEFAULT_GATEWAY_VALUE[2],DEFAULT_GATEWAY_VALUE[3]);
     IPAddress subnet (DEFAULT_MASK_VALUE[0],DEFAULT_MASK_VALUE[1],DEFAULT_MASK_VALUE[2],DEFAULT_MASK_VALUE[3]);
     String ssid = FPSTR(DEFAULT_AP_SSID);
     String pwd = FPSTR(DEFAULT_AP_PASSWORD);
-/*TODO:WF3D_EEPROM*/    WiFi.softAP(ssid.c_str(),pwd.c_str());
+    WiFi.softAP(ssid.c_str(),pwd.c_str());
     delay(500);
-/*TODO:WF3D_EEPROM*/    WiFi.softAPConfig( local_ip,  gateway,  subnet);
+    WiFi.softAPConfig( local_ip,  gateway,  subnet);
     delay(1000);
     Board::status.print(F("Safe mode started"));
 }
@@ -154,9 +154,9 @@ bool WIFI_CONFIG::Setup(bool force_ap)
         return false;
     }
 #ifdef ARDUINO_ARCH_ESP8266
-/*TODO:WF3D_EEPROM*/    WiFi.setSleepMode ((WiFiSleepType_t)bflag);
+    WiFi.setSleepMode ((WiFiSleepType_t)bflag);
 #else
-/*TODO:WF3D_EEPROM*/    esp_wifi_set_ps((wifi_ps_type_t)bflag);
+    esp_wifi_set_ps((wifi_ps_type_t)bflag);
 #endif
     sleep_mode=bflag;
     if (force_ap) {
@@ -222,11 +222,11 @@ bool WIFI_CONFIG::Setup(bool force_ap)
             LOG("\r\n")
             //apply according active wifi mode
             LOG("Set IP\r\n")
-/*TODO:WF3D_EEPROM*/            WiFi.softAPConfig( local_ip,  gateway,  subnet);
+            WiFi.softAPConfig( local_ip,  gateway,  subnet);
             delay(100);
         }
         LOG("Disable STA\r\n")
-/*TODO:WF3D_EEPROM*/        WiFi.enableSTA(false);
+        WiFi.enableSTA(false);
         delay(100);
         LOG("Set phy mode\r\n")
         //setup PHY_MODE
@@ -234,16 +234,16 @@ bool WIFI_CONFIG::Setup(bool force_ap)
             return false;
         }
 #ifdef ARDUINO_ARCH_ESP32
-/*TODO:WF3D_EEPROM*/		esp_wifi_set_protocol(ESP_IF_WIFI_AP, bflag);
+		esp_wifi_set_protocol(ESP_IF_WIFI_AP, bflag);
 #endif
         LOG("Set AP\r\n")
         //setup Soft AP
-/*TODO:WF3D_EEPROM*/        WiFi.mode(WIFI_AP);
+        WiFi.mode(WIFI_AP);
         delay(50);
-/*TODO:WF3D_EEPROM*/        WiFi.softAP(sbuf, pwd);
+        WiFi.softAP(sbuf, pwd);
         delay(100);
 #ifdef ARDUINO_ARCH_ESP8266
-/*TODO:WF3D_EEPROM*/        WiFi.setPhyMode((WiFiPhyMode_t)bflag);
+        WiFi.setPhyMode((WiFiPhyMode_t)bflag);
 #endif
         delay(100);
         LOG("Get current config\r\n")
@@ -287,15 +287,15 @@ bool WIFI_CONFIG::Setup(bool force_ap)
 #ifdef ARDUINO_ARCH_ESP32
 		conf.ap.max_connection=DEFAULT_MAX_CONNECTIONS;
         conf.ap.beacon_interval=DEFAULT_BEACON_INTERVAL;
-/*TODO:WF3D_EEPROM*/        if (esp_wifi_set_config(ESP_IF_WIFI_AP, &conf)!=ESP_OK){
+        if (esp_wifi_set_config(ESP_IF_WIFI_AP, &conf)!=ESP_OK){
             Board::status.print(F("Error Wifi AP!"));
             delay(1000);
         }
 #else
         apconfig.max_connection=DEFAULT_MAX_CONNECTIONS;
         apconfig.beacon_interval=DEFAULT_BEACON_INTERVAL;
-        //apply settings to current and to default
-/*TODO:WF3D_EEPROM*/        if (!wifi_softap_set_config(&apconfig) || !wifi_softap_set_config_current(&apconfig)) {
+        //update the current (stored in RAM) AP configuration
+        if (!wifi_softap_set_config_current(&apconfig)) {
             Board::status.print(F("Error Wifi AP!"));
             delay(1000);
         }
@@ -333,24 +333,24 @@ bool WIFI_CONFIG::Setup(bool force_ap)
             }
             IPAddress subnet (ip_buf[0],ip_buf[1],ip_buf[2],ip_buf[3]);
             //apply according active wifi mode
-/*TODO:WF3D_EEPROM*/            WiFi.config( local_ip,  gateway,  subnet);
+            WiFi.config( local_ip,  gateway,  subnet);
         }
-/*TODO:WF3D_EEPROM*/        WiFi.enableAP(false);
+        WiFi.enableAP(false);
         delay(100);
         //setup PHY_MODE
         if (!CONFIG::read_byte(EP_STA_PHY_MODE, &bflag )) {
             return false;
         }
 #ifdef ARDUINO_ARCH_ESP32
-/*TODO:WF3D_EEPROM*/		esp_wifi_set_protocol(ESP_IF_WIFI_STA, bflag);
+		esp_wifi_set_protocol(ESP_IF_WIFI_STA, bflag);
 #endif
         //setup station mode
-/*TODO:WF3D_EEPROM*/        WiFi.mode(WIFI_STA);
+        WiFi.mode(WIFI_STA);
         delay(100);
 #ifdef ARDUINO_ARCH_ESP8266
-/*TODO:WF3D_EEPROM*/        WiFi.setPhyMode((WiFiPhyMode_t)bflag);
+        WiFi.setPhyMode((WiFiPhyMode_t)bflag);
 #endif
-/*TODO:WF3D_EEPROM*/        WiFi.begin(sbuf, pwd);
+        WiFi.begin(sbuf, pwd);
         delay(100);
         byte i=0;
         //try to connect
@@ -387,9 +387,9 @@ bool WIFI_CONFIG::Setup(bool force_ap)
             return false;
         }
 #ifdef ARDUINO_ARCH_ESP8266
-/*TODO:WF3D_EEPROM*/        WiFi.hostname(hostname);
+        WiFi.hostname(hostname);
 #else
-/*TODO:WF3D_EEPROM*/		WiFi.setHostname(hostname);
+		WiFi.setHostname(hostname);
 #endif
     }
 
