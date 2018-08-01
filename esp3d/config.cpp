@@ -1363,22 +1363,24 @@ void CONFIG::print_config(tpipe output, bool plaintext)
     if (!plaintext)BRIDGE::print(F("\","), output);
     else BRIDGE::print(F("\n"), output);
 #ifdef ARDUINO_ARCH_ESP8266 
-    fs::FSInfo info;
-    SPIFFS.info(info);
     if (!plaintext)BRIDGE::print(F("\"update_size\":\""), output);
-    else BRIDGE::print(F("Available Size for update: "), output);
-    uint32_t  flashsize = ESP.getFlashChipSize();
-    if (flashsize > 1024 * 1024) flashsize = 1024 * 1024;
-    BRIDGE::print(formatBytes(flashsize - ESP.getSketchSize()-info.totalBytes).c_str(), output);
+    else BRIDGE::print(F("Available Size for OTA update: "), output);
+    uint32_t freeProgramFlash = ESP.getFreeSketchSpace();
+    // OTA uses free portion of the program memory. Coonsidering that the maximum size
+    // of ESP8266 executable code is 1 MB, free space for OTA is also limited by 1 MB
+    if (freeProgramFlash > 1024 * 1024) freeProgramFlash = 1024 * 1024;
+    BRIDGE::print(formatBytes(freeProgramFlash).c_str(), output);
     if (!plaintext)BRIDGE::print(F("\","), output);
     else {
-        if ((flashsize - ESP.getSketchSize()-info.totalBytes) > (ESP.getSketchSize())) BRIDGE::println(F("(Ok)"), output);
-        else BRIDGE::println(F("(Not enough)"), output);
+            if (freeProgramFlash >= ESP.getSketchSize()) BRIDGE::println(F("(Ok)"), output);
+            else BRIDGE::println(F("(Not enough)"), output);
         }
 
     if (!plaintext)BRIDGE::print(F("\"spiffs_size\":\""), output);
     else BRIDGE::print(F("Available Size for SPIFFS: "), output);
    
+    fs::FSInfo info;
+    SPIFFS.info(info);
     BRIDGE::print(formatBytes(info.totalBytes).c_str(), output);
     if (!plaintext)BRIDGE::print(F("\","), output);
     else BRIDGE::print(F("\n"), output);
