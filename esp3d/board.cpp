@@ -119,20 +119,23 @@ void StatusController::update()
     updateLeds();
 }
 
-void StatusController::print(const char *status)
+void StatusController::print(const char *status, bool displayInLogOnly /*=false*/)
 {
     if (Board::pDisplay != NULL)
     {
         Board::pDisplay->newLine();
     }
 
-    printOver(status);
+    printOver(status, displayInLogOnly);
 }
 
-void StatusController::printOver(const char *status)
+void StatusController::printOver(const char *status, bool displayInLogOnly /*=false*/)
 {
-    Board::printerPort.print(FPSTR(M117_));
-    Board::printerPort.println(status);
+    if (!displayInLogOnly)
+    {
+        Board::printerPort.print(FPSTR(M117_));
+        Board::printerPort.println(status);
+    }
 
     if (Board::pDisplay != NULL)
     {

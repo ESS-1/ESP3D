@@ -159,7 +159,7 @@ void setup()
     }
     LOG("Setup Done\r\n");
 
-    Board::status.print(F("Ready"));
+    Board::status.print(F("Ready"), true);
 }
 
 //main loop

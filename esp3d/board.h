@@ -24,17 +24,17 @@ public:
     void init();
     void update();
 
-    void print(const char *status);
-    void printOver(const char *status);
+    void print(const char *status, bool displayInLogOnly = false);
+    void printOver(const char *status, bool displayInLogOnly = false);
 
-    inline void print(const String &status)
+    inline void print(const String &status, bool displayInLogOnly = false)
     {
-        print(status.c_str());
+        print(status.c_str(), displayInLogOnly);
     }
 
-    inline void printOver(const String &status)
+    inline void printOver(const String &status, bool displayInLogOnly = false)
     {
-        printOver(status.c_str());
+        printOver(status.c_str(), displayInLogOnly);
     }
 };
 
