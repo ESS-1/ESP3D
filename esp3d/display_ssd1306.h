@@ -84,8 +84,8 @@ private:
             _display.drawString(0, y, _log[idx]);
         }
 
-        setBrightness(SSD1306_BRIGHTNESS_HIGH);
         _display.display();
+        setBrightness(SSD1306_BRIGHTNESS_HIGH);
     }
 
     const uint8_t* getIconData()
@@ -195,6 +195,10 @@ public:
         Wire.endTransmission();
 
         _display.displayOn();
+
+        // Simple display test pattern
+        _display.fillRect(0, 0, 128, 64);
+        _display.display();
     }
 
     virtual bool isPinUsed(uint8_t pin) const

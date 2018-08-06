@@ -218,8 +218,6 @@ void Board::init()
 {
     if (pDisplay != NULL) pDisplay->init();
     status.init();
-
-    status.print(F("Loading..."));
 }
 
 void Board::update()
