@@ -230,6 +230,7 @@ void Board::update()
     if (pLedR != NULL) pLedR->update();
     if (pLedG != NULL) pLedG->update();
     if (pLedB != NULL) pLedB->update();
+    if (pDisplay != NULL) pDisplay->update();
 }
 
 bool Board::isPinUsed(uint8_t pin)

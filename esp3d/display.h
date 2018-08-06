@@ -22,6 +22,7 @@ class Display
 public:
     virtual void init() = 0;
     virtual bool isPinUsed(uint8_t pin) const = 0;
+    virtual void update() = 0;
     virtual void printSummary(WiFiIcon icon, const char *s) = 0;
     virtual void print(const char *s) = 0;
     virtual void newLine() = 0;

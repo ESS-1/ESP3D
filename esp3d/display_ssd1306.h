@@ -18,19 +18,42 @@
 #include "icons/ap.h"
 #include "icons/sta.h"
 
-#define SSD1306_LINES (5)
-#define SSD1306_CHARS_PER_LINE (48) // includes NULL
+#define SSD1306_LINES            (5)
+#define SSD1306_CHARS_PER_LINE   (48)   // includes NULL
+
+#define SSD1306_BRIGHTNESS_HIGH  (0xF0)
+#define SSD1306_BRIGHTNESS_LOW   (0x00)
+#define SSD1306_DIMMING_DELAY    (5000) // ms
+#define SSD1306_DIMMING_SLOWDOWN (12)   // ms per brightness unit
+
+#define SSD1306_PRECHARGE        (0x11)
+#define SSD1306_COM_DESELECT     (0x20)
 
 class DisplaySSD1306 : public Display
 {
 private:
     SSD1306Wire _display;
+    uint8_t _address;
     uint8_t _sda;
     uint8_t _scl;
-    int _line_idx;
+    uint8_t _line_idx;
     WiFiIcon _icon;
     char _summary[SSD1306_CHARS_PER_LINE];
     char _log[SSD1306_LINES][SSD1306_CHARS_PER_LINE];
+
+    uint8_t _brightness;
+    uint32_t _highBrightnessSetTime_ms;
+
+    void setBrightness(uint8_t brightness)
+    {
+        _display.setContrast(brightness, SSD1306_PRECHARGE, SSD1306_COM_DESELECT);
+
+        _brightness = brightness;
+        if (brightness >= SSD1306_BRIGHTNESS_HIGH)
+        {
+            _highBrightnessSetTime_ms = millis();
+        }
+    }
 
     void refresh()
     {
@@ -38,7 +61,7 @@ private:
 
         // Draw the summmary area
         const uint8_t *pIcon = getIconData();
-        int statusStringX = 0;
+        int16_t statusStringX = 0;
         if (pIcon != NULL)
         {
             _display.drawXbm(0, 0, 12, 12, pIcon);
@@ -49,10 +72,10 @@ private:
         _display.drawLine(0, 13, 127, 13);
 
         // Draw the log section
-        uint8_t y = 12;
-        for (int i = 0; i<SSD1306_LINES; ++i, y+=10)
+        int16_t y = 12;
+        for (uint8_t i = 0; i<SSD1306_LINES; ++i, y+=10)
         {
-            int idx = i+_line_idx;
+            uint8_t idx = i+_line_idx;
             if (idx >= SSD1306_LINES)
             {
                 idx-=SSD1306_LINES;
@@ -61,6 +84,7 @@ private:
             _display.drawString(0, y, _log[idx]);
         }
 
+        setBrightness(SSD1306_BRIGHTNESS_HIGH);
         _display.display();
     }
 
@@ -84,7 +108,7 @@ private:
         bool changed = false;
         bool skipNextIfPercent = false;
 
-        for (int i = 0; i < SSD1306_CHARS_PER_LINE-1; ++i, ++src)
+        for (uint16_t i = 0; i < SSD1306_CHARS_PER_LINE-1; ++i, ++src)
         {
             // Unescape '%%'
             if (skipNextIfPercent && *src == '%')
@@ -109,26 +133,78 @@ private:
         return changed;
     }
 
+    inline uint32_t getTimeDelta(uint32_t t0, uint32_t t) const
+    {
+        return t >= t0 ? t-t0 : 1+~t0+t;
+    };
+
+    void updateBrightness()
+    {
+        if (_brightness <= SSD1306_BRIGHTNESS_LOW)
+        {
+            return;
+        }
+
+        uint32_t dt = getTimeDelta(_highBrightnessSetTime_ms, millis());
+        if (dt < (SSD1306_DIMMING_DELAY+SSD1306_DIMMING_SLOWDOWN))
+        {
+            return;
+        }
+
+        if (_brightness >= SSD1306_BRIGHTNESS_HIGH)
+        {
+            setBrightness(SSD1306_BRIGHTNESS_HIGH-1);
+        }
+        else
+        {
+            int32_t brightness = int32_t(SSD1306_BRIGHTNESS_HIGH) - (dt-SSD1306_DIMMING_DELAY)/SSD1306_DIMMING_SLOWDOWN;
+            setBrightness(brightness < SSD1306_BRIGHTNESS_LOW
+                ? SSD1306_BRIGHTNESS_LOW
+                : brightness);
+        }
+    }
+
 public:
     DisplaySSD1306(uint8_t address, uint8_t sda, uint8_t scl)
     : _display(address, sda, scl),
+      _address(address),
       _scl(scl),
       _sda(sda),
-      _line_idx(0)
+      _line_idx(0),
+      _brightness(0),
+      _highBrightnessSetTime_ms(0)
     {
     }
 
     virtual void init()
     {
         _display.init();
+        _display.displayOff();
         _display.resetDisplay();
         _display.flipScreenVertically();
+
+        setBrightness(SSD1306_BRIGHTNESS_LOW);
+
+        // Configure SSD1306 clock: 0xD5 -> 0x80
+        // Default value used by the library causes uneven pixel brightness
+        Wire.beginTransmission(_address);
+        Wire.write(0x80);
+        Wire.write(0xD5);
+        Wire.write(0x80);
+        Wire.write(0x80);//todo
+        Wire.endTransmission();
+
         _display.displayOn();
     }
 
     virtual bool isPinUsed(uint8_t pin) const
     {
         return pin == _scl || pin == _sda;
+    }
+
+    virtual void update()
+    {
+        updateBrightness();
     }
 
     virtual void printSummary(WiFiIcon icon, const char *s)
