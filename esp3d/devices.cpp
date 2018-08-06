@@ -94,13 +94,13 @@ void GpioOutputDevice::update()
         if (_mode == mode_blink)
         {
             uint32_t tCycle = _tOn_ms+_tOff_ms;
-            uint32_t reminder = dt%tCycle;
-            digitalWrite(_pin, reminder < _tOn_ms ? _active : !_active);
+            uint32_t remainder = dt%tCycle;
+            digitalWrite(_pin, remainder < _tOn_ms ? _active : !_active);
 
             // Increase start time to avoid possible overflow
-            if (dt > reminder)
+            if (dt > remainder)
             {
-                _startTime_ms += (dt-reminder);
+                _startTime_ms += (dt-remainder);
             }
         }
         else if (dt >= _tOn_ms) // Single pulse
