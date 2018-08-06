@@ -103,7 +103,7 @@ void setup()
 #endif
     //WiFi.disconnect();
     WiFi.mode(WIFI_OFF);
-    delay(8000);
+    delay(BRD_POWERON_DELAY);
     CONFIG::InitDirectSD();
 
     //check if EEPROM has value

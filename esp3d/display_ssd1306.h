@@ -23,7 +23,7 @@
 
 #define SSD1306_BRIGHTNESS_HIGH  (0xF0)
 #define SSD1306_BRIGHTNESS_LOW   (0x00)
-#define SSD1306_DIMMING_DELAY    (5000) // ms
+#define SSD1306_DIMMING_DELAY    (7000) // ms
 #define SSD1306_DIMMING_SLOWDOWN (12)   // ms per brightness unit
 
 #define SSD1306_PRECHARGE        (0x11)

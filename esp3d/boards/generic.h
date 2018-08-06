@@ -16,6 +16,8 @@
 //#define PIN_OUT_PRINTER_RESET (15)
 #define PIN_IN_SETTINGS_RESET (2)
 
+#define BRD_POWERON_DELAY     (8000)
+
 //#define DISPLAY_SSD1306
 //#define DISPLAY_I2C_ADDR      (0x3C)
 //#define DISPLAY_I2C_SDA       (5)

@@ -61,7 +61,7 @@
 //load board definition
 //#include "boards/generic.h"
 //#include "boards/wf3d.h"
-#include "boards/wf3d_with_ssd1306.h"
+#include "boards/wf3d.h"
 
 
 //number of clients allowed to use data port at once
