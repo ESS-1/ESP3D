@@ -537,6 +537,8 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
         delay(0);
         //Start JSON
         BRIDGE::println(F("{\"EEPROM\":["), output);
+        auto bulkAccessor = CONFIG::beginBulkAccess();
+
         if (cmd_params == "network" || cmd_params == "") {
             
             //1- Baud Rate
@@ -1037,6 +1039,8 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print(F("\"}"), output);
         }
 
+        bulkAccessor.close();
+
         //end JSON
         BRIDGE::println(F("\n]}"), output);
         delay(0);
@@ -1335,12 +1339,16 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
         if (CONFIG::is_direct_sd) BRIDGE::print(F("Direct SD"), output);
         else  BRIDGE::print(F("Serial SD"), output);
         BRIDGE::print(F(" # primary sd:"), output);
+
+        auto bulkAccessor = CONFIG::beginBulkAccess();
         if (!CONFIG::read_byte(EP_PRIMARY_SD, &sd_dir )) sd_dir = DEFAULT_PRIMARY_SD;
         if (sd_dir == SD_DIRECTORY) BRIDGE::print(F("/sd/"), output);
         else if (sd_dir == EXT_DIRECTORY) BRIDGE::print(F("/ext/"), output);
         else BRIDGE::print(F("none"), output);
         BRIDGE::print(F(" # secondary sd:"), output);
         if (!CONFIG::read_byte(EP_SECONDARY_SD, &sd_dir )) sd_dir = DEFAULT_SECONDARY_SD;
+        bulkAccessor.close();
+
         if (sd_dir == SD_DIRECTORY) BRIDGE::print(F("/sd/"), output);
         else if (sd_dir == EXT_DIRECTORY) BRIDGE::print(F("/ext/"), output);
         else BRIDGE::print(F("none"), output);

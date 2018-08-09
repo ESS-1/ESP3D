@@ -1097,6 +1097,7 @@ void handle_login()
                 sPassword = web_interface->web_server.arg("PASSWORD");
                 String sadminPassword;
 
+                auto bulkAccessor = CONFIG::beginBulkAccess();
                 if (!CONFIG::read_string(EP_ADMIN_PWD, sadminPassword, MAX_LOCAL_PASSWORD_LENGTH)) {
                     sadminPassword=FPSTR(DEFAULT_ADMIN_PWD);
                 }
@@ -1106,6 +1107,7 @@ void handle_login()
                 if (!CONFIG::read_string(EP_USER_PWD, suserPassword, MAX_LOCAL_PASSWORD_LENGTH)) {
                     suserPassword=FPSTR(DEFAULT_USER_PWD);
                 }
+                bulkAccessor.close();
 
                 if(!(((sUser==FPSTR(DEFAULT_ADMIN_LOGIN)) && (strcmp(sPassword.c_str(),sadminPassword.c_str())==0)) ||
                         ((sUser==FPSTR(DEFAULT_USER_LOGIN)) && (strcmp(sPassword.c_str(),suserPassword.c_str()) == 0)))) {

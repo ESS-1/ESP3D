@@ -210,7 +210,6 @@ void Board::resetSettings()
     if (pLedB != NULL) pLedB->on();
 
     CONFIG::reset_config();
-    status.print(F("Restarting..."));
     CONFIG::esp_restart();
 }
 

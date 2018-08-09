@@ -147,6 +147,8 @@ bool WIFI_CONFIG::Setup(bool force_ap)
     IPAddress currentIP;
     byte bflag=0;
     byte bmode=0;
+
+    auto bulkAccessor = CONFIG::beginBulkAccess();
     //system_update_cpu_freq(SYS_CPU_160MHZ);
     //set the sleep mode
     if (!CONFIG::read_byte(EP_SLEEP_MODE, &bflag )) {
@@ -392,6 +394,7 @@ bool WIFI_CONFIG::Setup(bool force_ap)
 		WiFi.setHostname(hostname);
 #endif
     }
+    bulkAccessor.close();
 
     //Get IP
     if (WiFi.getMode()==WIFI_STA) {

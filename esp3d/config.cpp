@@ -38,6 +38,64 @@ extern "C" {
 
 
 uint8_t CONFIG::FirmwareTarget = UNKNOWN_FW;
+volatile int CONFIG::EEPROMAccessor::_numInstances = 0;
+volatile bool CONFIG::EEPROMAccessor::_dirty = false;
+
+CONFIG::EEPROMAccessor::EEPROMAccessor() : _isClosed(false)
+{
+    if (_numInstances++ == 0)
+        EEPROM.begin(EEPROM_SIZE);
+}
+
+CONFIG::EEPROMAccessor::~EEPROMAccessor()
+{
+    close();
+}
+
+CONFIG::EEPROMAccessor::EEPROMAccessor(const CONFIG::EEPROMAccessor& other) : _isClosed(other._isClosed)
+{
+    if (!_isClosed) ++_numInstances;
+}
+
+CONFIG::EEPROMAccessor& CONFIG::EEPROMAccessor::operator=(const CONFIG::EEPROMAccessor& other)
+{
+    if (!_isClosed && other._isClosed) {
+        close();
+    }
+    else if (_isClosed && !other._isClosed) {
+        ++_numInstances;
+        _isClosed = false;
+    }
+
+    return *this;
+}
+
+void CONFIG::EEPROMAccessor::close()
+{
+    if (!_isClosed) {
+        if (--_numInstances == 0) {
+            EEPROM.end();
+            if (_dirty) {
+                _dirty = false;
+                Board::status.print("Cfg. saved");
+            }
+        }
+        _isClosed = true;
+    }
+}
+
+uint8_t CONFIG::EEPROMAccessor::read(int address)
+{
+    return EEPROM.read(address);
+}
+
+void CONFIG::EEPROMAccessor::write(int address, uint8_t value)
+{
+    if (_numInstances > 0)
+        _dirty = true;
+
+    EEPROM.write(address, value);
+}
 
 bool CONFIG::SetFirmwareTarget(uint8_t fw){
     if ( fw <= MAX_FW_ID) {
@@ -98,7 +156,10 @@ bool CONFIG::InitBaudrate(){
 }
 
 bool CONFIG::InitExternalPorts(){
+    EEPROMAccessor bulkAccessor = beginBulkAccess();
     if (!CONFIG::read_buffer(EP_WEB_PORT,  (byte *)&(wifi_config.iweb_port), INTEGER_LENGTH) || !CONFIG::read_buffer(EP_DATA_PORT,  (byte *)&(wifi_config.idata_port), INTEGER_LENGTH)) return false;
+    bulkAccessor.close();
+
     if (wifi_config.iweb_port < DEFAULT_MIN_WEB_PORT ||wifi_config.iweb_port > DEFAULT_MAX_WEB_PORT || wifi_config.idata_port < DEFAULT_MIN_DATA_PORT || wifi_config.idata_port > DEFAULT_MAX_DATA_PORT) return false;
     return true;
 }
@@ -131,6 +192,7 @@ bool CONFIG::update_settings(){
                 success = false;
                 LOG("Invalid config file\r\n")
             } else { //file format is correct - let parse the settings
+                EEPROMAccessor eepromAccessor = beginBulkAccess();
                 //Section [wifi]
                 //Hostname
                 //hostname = myesp
@@ -669,7 +731,7 @@ bool CONFIG::update_settings(){
                         }
                     }
                 }
-            
+                eepromAccessor.close();
             }
             espconfig.close();
             if(success) {
@@ -688,20 +750,21 @@ bool CONFIG::update_settings(){
                  return false;
                 LOG("Failed to rename file\r\n")
             }
-            } else {
-                 return false;
-                LOG("Failed to open config file\r\n")
-            }
         } else {
-            return false;
-            LOG("No config file\r\n")
+                return false;
+            LOG("Failed to open config file\r\n")
         }
+    } else {
+        return false;
+        LOG("No config file\r\n")
+    }
     return answer;
 }
 #endif
 void CONFIG::esp_restart()
 {
     LOG("Restarting\r\n")
+    Board::status.print(F("Restarting..."));
     Board::printerPort.flush();
     delay(500);
 #ifdef ARDUINO_ARCH_ESP8266
@@ -715,6 +778,15 @@ void CONFIG::esp_restart()
 }
 
 bool CONFIG::is_direct_sd = false;
+
+// The method improves performance when multiple settings are accessed subsequently
+// by preventing CONFIG class from re-reading EEPROM before accessing each setting.
+// An accessor returned by the method should be closed after accessing the settings.
+// If not closed explicitly, accessor does this automatically when its detructor is called.
+CONFIG::EEPROMAccessor CONFIG::beginBulkAccess()
+{
+    return EEPROMAccessor();
+}
 
 bool CONFIG::isHostnameValid(const char * hostname)
 {
@@ -915,22 +987,23 @@ bool CONFIG::read_string(int pos, char byte_buffer[], int size_max)
         LOG("Error read string\r\n")
         return false;
     }
-    EEPROM.begin(EEPROM_SIZE);
+
     byte b = 13; // non zero for the while loop below
     int i=0;
 
     //read until max size is reached or \0 is found
+    EEPROMAccessor eepromAccessor = beginBulkAccess();
     while (i < size_max && b != 0) {
-        b = EEPROM.read(pos+i);
+        b = eepromAccessor.read(pos+i);
         byte_buffer[i]=b;
         i++;
     }
+    eepromAccessor.close();
 
     // Be sure there is a 0 at the end.
     if (b!=0) {
         byte_buffer[i-1]=0x00;
     }
-    EEPROM.end();
 
     return true;
 }
@@ -946,16 +1019,16 @@ bool CONFIG::read_string(int pos, String & sbuffer, int size_max)
     int i=0;
     sbuffer="";
 
-    EEPROM.begin(EEPROM_SIZE);
     //read until max size is reached or \0 is found
+    EEPROMAccessor eepromAccessor = beginBulkAccess();
     while (i < size_max && b != 0) {
-        b = EEPROM.read(pos+i);
+        b = eepromAccessor.read(pos+i);
         if (b!=0) {
             sbuffer+=char(b);
         }
         i++;
     }
-    EEPROM.end();
+    eepromAccessor.close();
 
     return true;
 }
@@ -969,13 +1042,15 @@ bool CONFIG::read_buffer(int pos, byte byte_buffer[], int size_buffer)
         return false;
     }
     int i=0;
-    EEPROM.begin(EEPROM_SIZE);
+
     //read until max size is reached
+    EEPROMAccessor eepromAccessor = beginBulkAccess();
     while (i<size_buffer ) {
-        byte_buffer[i]=EEPROM.read(pos+i);
+        byte_buffer[i]=eepromAccessor.read(pos+i);
         i++;
     }
-    EEPROM.end();
+    eepromAccessor.close();
+
     return true;
 }
 
@@ -987,9 +1062,11 @@ bool CONFIG::read_byte(int pos, byte * value)
         LOG("Error read byte\r\n")
         return false;
     }
-    EEPROM.begin(EEPROM_SIZE);
-    value[0] = EEPROM.read(pos);
-    EEPROM.end();
+
+    EEPROMAccessor eepromAccessor = beginBulkAccess();
+    value[0] = eepromAccessor.read(pos);
+    eepromAccessor.close();
+
     return true;
 }
 
@@ -1129,16 +1206,18 @@ bool CONFIG::write_string(int pos, const char * byte_buffer)
         LOG("Error write string\r\n")
         return false;
     }
+
     //copy the value(s)
-    EEPROM.begin(EEPROM_SIZE);
+    EEPROMAccessor eepromAccessor = beginBulkAccess();
     for (int i = 0; i < size_buffer; i++) {
-        EEPROM.write(pos + i, byte_buffer[i]);
+        eepromAccessor.write(pos + i, byte_buffer[i]);
     }
 
     //0 terminal
-    EEPROM.write(pos + size_buffer, 0x00);
-    EEPROM.commit();
-    EEPROM.end();
+    eepromAccessor.write(pos + size_buffer, 0x00);
+    eepromAccessor.close();
+
+    Board::status.print(String(F("Cfg. updated [S]"))+pos);
     return true;
 }
 
@@ -1150,13 +1229,15 @@ bool CONFIG::write_buffer(int pos, const byte * byte_buffer, int size_buffer)
         LOG("Error write buffer\r\n")
         return false;
     }
-    EEPROM.begin(EEPROM_SIZE);
+
     //copy the value(s)
+    EEPROMAccessor eepromAccessor = beginBulkAccess();
     for (int i = 0; i < size_buffer; i++) {
-        EEPROM.write(pos + i, byte_buffer[i]);
+        eepromAccessor.write(pos + i, byte_buffer[i]);
     }
-    EEPROM.commit();
-    EEPROM.end();
+    eepromAccessor.close();
+
+    Board::status.print(String(F("Cfg. updated [*]"))+pos);
     return true;
 }
 
@@ -1168,10 +1249,12 @@ bool CONFIG::write_byte(int pos, const byte value)
         LOG("Error write byte\r\n")
         return false;
     }
-    EEPROM.begin(EEPROM_SIZE);
-    EEPROM.write(pos, value);
-    EEPROM.commit();
-    EEPROM.end();
+
+    EEPROMAccessor eepromAccessor = beginBulkAccess();
+    eepromAccessor.write(pos, value);
+    eepromAccessor.close();
+
+    Board::status.print(String(F("Cfg. updated [B]"))+pos);
     return true;
 }
 
@@ -1180,144 +1263,54 @@ bool CONFIG::reset_config()
     // Reset persistent WiFi settings
     system_restore();
 
-    if(!CONFIG::write_string(EP_DATA_STRING,"")) {
-        return false;
-    }
-    if(!CONFIG::write_byte(EP_WIFI_MODE,DEFAULT_WIFI_MODE)) {
-        return false;
-    }
-    if(!CONFIG::write_buffer(EP_BAUD_RATE,(const byte *)&DEFAULT_BAUD_RATE,INTEGER_LENGTH)) {
-        return false;
-    }
-    if(!CONFIG::write_string(EP_AP_SSID,FPSTR(DEFAULT_AP_SSID))) {
-        return false;
-    }
-    if(!CONFIG::write_string(EP_AP_PASSWORD,FPSTR(DEFAULT_AP_PASSWORD))) {
-        return false;
-    }
-    if(!CONFIG::write_string(EP_STA_SSID,FPSTR(DEFAULT_STA_SSID))) {
-        return false;
-    }
-    if(!CONFIG::write_string(EP_STA_PASSWORD,FPSTR(DEFAULT_STA_PASSWORD))) {
-        return false;
-    }
-    if(!CONFIG::write_byte(EP_AP_IP_MODE,DEFAULT_AP_IP_MODE)) {
-        return false;
-    }
-    if(!CONFIG::write_byte(EP_STA_IP_MODE,DEFAULT_STA_IP_MODE)) {
-        return false;
-    }
-    if(!CONFIG::write_buffer(EP_STA_IP_VALUE,DEFAULT_IP_VALUE,IP_LENGTH)) {
-        return false;
-    }
-    if(!CONFIG::write_buffer(EP_STA_MASK_VALUE,DEFAULT_MASK_VALUE,IP_LENGTH)) {
-        return false;
-    }
-    if(!CONFIG::write_buffer(EP_STA_GATEWAY_VALUE,DEFAULT_GATEWAY_VALUE,IP_LENGTH)) {
-        return false;
-    }
-    if(!CONFIG::write_byte(EP_STA_PHY_MODE,DEFAULT_PHY_MODE)) {
-        return false;
-    }
-    if(!CONFIG::write_buffer(EP_AP_IP_VALUE,DEFAULT_IP_VALUE,IP_LENGTH)) {
-        return false;
-    }
-    if(!CONFIG::write_buffer(EP_AP_MASK_VALUE,DEFAULT_MASK_VALUE,IP_LENGTH)) {
-        return false;
-    }
-    if(!CONFIG::write_buffer(EP_AP_GATEWAY_VALUE,DEFAULT_GATEWAY_VALUE,IP_LENGTH)) {
-        return false;
-    }
-    if(!CONFIG::write_byte(EP_AP_PHY_MODE,DEFAULT_PHY_MODE)) {
-        return false;
-    }
-    if(!CONFIG::write_byte(EP_SLEEP_MODE,DEFAULT_SLEEP_MODE)) {
-        return false;
-    }
-    if(!CONFIG::write_byte(EP_CHANNEL,DEFAULT_CHANNEL)) {
-        return false;
-    }
-    if(!CONFIG::write_byte(EP_AUTH_TYPE,DEFAULT_AUTH_TYPE)) {
-        return false;
-    }
-    if(!CONFIG::write_byte(EP_SSID_VISIBLE,DEFAULT_SSID_VISIBLE)) {
-        return false;
-    }
-    if(!CONFIG::write_buffer(EP_WEB_PORT,(const byte *)&DEFAULT_WEB_PORT,INTEGER_LENGTH)) {
-        return false;
-    }
-    if(!CONFIG::write_buffer(EP_DATA_PORT,(const byte *)&DEFAULT_DATA_PORT,INTEGER_LENGTH)) {
-        return false;
-    }
-    if(!CONFIG::write_byte(EP_REFRESH_PAGE_TIME,DEFAULT_REFRESH_PAGE_TIME)) {
-        return false;
-    }
-    if(!CONFIG::write_byte(EP_REFRESH_PAGE_TIME2,DEFAULT_REFRESH_PAGE_TIME)) {
-        return false;
-    }
-    if(!CONFIG::write_string(EP_HOSTNAME,wifi_config.get_default_hostname())) {
-        return false;
-    }
-    if(!CONFIG::write_buffer(EP_XY_FEEDRATE,(const byte *)&DEFAULT_XY_FEEDRATE,INTEGER_LENGTH)) {
-        return false;
-    }
-    if(!CONFIG::write_buffer(EP_Z_FEEDRATE,(const byte *)&DEFAULT_Z_FEEDRATE,INTEGER_LENGTH)) {
-        return false;
-    }
-    if(!CONFIG::write_buffer(EP_E_FEEDRATE,(const byte *)&DEFAULT_E_FEEDRATE,INTEGER_LENGTH)) {
-        return false;
-    }
-    if(!CONFIG::write_string(EP_ADMIN_PWD,FPSTR(DEFAULT_ADMIN_PWD))) {
-        return false;
-    }
-    if(!CONFIG::write_string(EP_USER_PWD,FPSTR(DEFAULT_USER_PWD))) {
-        return false;
-    }
-    
-    if(!CONFIG::write_byte(EP_TARGET_FW, UNKNOWN_FW)) {
-        return false;
-    }
-    
-    if(!CONFIG::write_byte(EP_TIMEZONE, DEFAULT_TIME_ZONE)) {
-        return false;
-    }
-    
-    if(!CONFIG::write_byte(EP_TIME_ISDST, DEFAULT_TIME_DST)) {
-        return false;
-    }
-    
-     if(!CONFIG::write_byte(EP_PRIMARY_SD, DEFAULT_PRIMARY_SD)) {
-        return false;
-    }
-    
-     if(!CONFIG::write_byte(EP_SECONDARY_SD, DEFAULT_SECONDARY_SD)) {
-        return false;
-    }
-    
-    if(!CONFIG::write_byte(EP_IS_DIRECT_SD, DEFAULT_IS_DIRECT_SD)) {
-        return false;
-    }
-    
-     if(!CONFIG::write_byte(EP_DIRECT_SD_CHECK, DEFAULT_DIRECT_SD_CHECK)) {
-        return false;
-    }
-    
-    if(!CONFIG::write_byte(EP_SD_CHECK_UPDATE_AT_BOOT, DEFAULT_SD_CHECK_UPDATE_AT_BOOT)) {
-        return false;
-    }
+    // Open EEPROM to avoid multiple writes
+    EEPROMAccessor eepromAccessor = beginBulkAccess();
+    bool succeeded =
+        write_string(EP_DATA_STRING,"") &&
+        write_byte(EP_WIFI_MODE,DEFAULT_WIFI_MODE) &&
+        write_buffer(EP_BAUD_RATE,(const byte *)&DEFAULT_BAUD_RATE,INTEGER_LENGTH) &&
+        write_string(EP_AP_SSID,FPSTR(DEFAULT_AP_SSID)) &&
+        write_string(EP_AP_PASSWORD,FPSTR(DEFAULT_AP_PASSWORD)) &&
+        write_string(EP_STA_SSID,FPSTR(DEFAULT_STA_SSID)) &&
+        write_string(EP_STA_PASSWORD,FPSTR(DEFAULT_STA_PASSWORD)) &&
+        write_byte(EP_AP_IP_MODE,DEFAULT_AP_IP_MODE) &&
+        write_byte(EP_STA_IP_MODE,DEFAULT_STA_IP_MODE) &&
+        write_buffer(EP_STA_IP_VALUE,DEFAULT_IP_VALUE,IP_LENGTH) &&
+        write_buffer(EP_STA_MASK_VALUE,DEFAULT_MASK_VALUE,IP_LENGTH) &&
+        write_buffer(EP_STA_GATEWAY_VALUE,DEFAULT_GATEWAY_VALUE,IP_LENGTH) &&
+        write_byte(EP_STA_PHY_MODE,DEFAULT_PHY_MODE) &&
+        write_buffer(EP_AP_IP_VALUE,DEFAULT_IP_VALUE,IP_LENGTH) &&
+        write_buffer(EP_AP_MASK_VALUE,DEFAULT_MASK_VALUE,IP_LENGTH) &&
+        write_buffer(EP_AP_GATEWAY_VALUE,DEFAULT_GATEWAY_VALUE,IP_LENGTH) &&
+        write_byte(EP_AP_PHY_MODE,DEFAULT_PHY_MODE) &&
+        write_byte(EP_SLEEP_MODE,DEFAULT_SLEEP_MODE) &&
+        write_byte(EP_CHANNEL,DEFAULT_CHANNEL) &&
+        write_byte(EP_AUTH_TYPE,DEFAULT_AUTH_TYPE) &&
+        write_byte(EP_SSID_VISIBLE,DEFAULT_SSID_VISIBLE) &&
+        write_buffer(EP_WEB_PORT,(const byte*)&DEFAULT_WEB_PORT,INTEGER_LENGTH) &&
+        write_buffer(EP_DATA_PORT,(const byte*)&DEFAULT_DATA_PORT,INTEGER_LENGTH) &&
+        write_byte(EP_REFRESH_PAGE_TIME,DEFAULT_REFRESH_PAGE_TIME) &&
+        write_byte(EP_REFRESH_PAGE_TIME2,DEFAULT_REFRESH_PAGE_TIME) &&
+        write_string(EP_HOSTNAME,wifi_config.get_default_hostname()) &&
+        write_buffer(EP_XY_FEEDRATE,(const byte *)&DEFAULT_XY_FEEDRATE,INTEGER_LENGTH) &&
+        write_buffer(EP_Z_FEEDRATE,(const byte *)&DEFAULT_Z_FEEDRATE,INTEGER_LENGTH) &&
+        write_buffer(EP_E_FEEDRATE,(const byte *)&DEFAULT_E_FEEDRATE,INTEGER_LENGTH) &&
+        write_string(EP_ADMIN_PWD,FPSTR(DEFAULT_ADMIN_PWD)) &&
+        write_string(EP_USER_PWD,FPSTR(DEFAULT_USER_PWD)) &&
+        write_byte(EP_TARGET_FW, UNKNOWN_FW) &&
+        write_byte(EP_TIMEZONE, DEFAULT_TIME_ZONE) &&
+        write_byte(EP_TIME_ISDST, DEFAULT_TIME_DST) &&
+        write_byte(EP_PRIMARY_SD, DEFAULT_PRIMARY_SD) &&
+        write_byte(EP_SECONDARY_SD, DEFAULT_SECONDARY_SD) &&
+        write_byte(EP_IS_DIRECT_SD, DEFAULT_IS_DIRECT_SD) &&
+        write_byte(EP_DIRECT_SD_CHECK, DEFAULT_DIRECT_SD_CHECK) &&
+        write_byte(EP_SD_CHECK_UPDATE_AT_BOOT, DEFAULT_SD_CHECK_UPDATE_AT_BOOT) &&
+        write_string(EP_TIME_SERVER1,FPSTR(DEFAULT_TIME_SERVER1)) &&
+        write_string(EP_TIME_SERVER2,FPSTR(DEFAULT_TIME_SERVER2)) &&
+        write_string(EP_TIME_SERVER3,FPSTR(DEFAULT_TIME_SERVER3));
+    eepromAccessor.close();
 
-    if(!CONFIG::write_string(EP_TIME_SERVER1,FPSTR(DEFAULT_TIME_SERVER1))) {
-        return false;
-    }
-    
-    if(!CONFIG::write_string(EP_TIME_SERVER2,FPSTR(DEFAULT_TIME_SERVER2))) {
-        return false;
-    }
-    
-    if(!CONFIG::write_string(EP_TIME_SERVER3,FPSTR(DEFAULT_TIME_SERVER3))) {
-        return false;
-    }
-    return true;
+    return succeeded;
 }
 
 void CONFIG::print_config(tpipe output, bool plaintext)

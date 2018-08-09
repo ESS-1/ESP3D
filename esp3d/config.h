@@ -390,7 +390,26 @@ const uint16_t Setting[][2] = {
 class CONFIG
 {
 public:
+    class EEPROMAccessor
+    {
+    private:
+        static volatile int _numInstances;
+        static volatile bool _dirty;
+        bool _isClosed;
+
+        EEPROMAccessor();
+        friend class CONFIG;
+    public:
+        ~EEPROMAccessor();
+        EEPROMAccessor(const EEPROMAccessor& other);
+        EEPROMAccessor& operator=(const EEPROMAccessor& other);
+        void close();
+        uint8_t read(int address);
+        void write(int address, uint8_t value);
+    };
+
     static bool is_direct_sd;
+    static EEPROMAccessor beginBulkAccess();
     static bool read_string(int pos, char byte_buffer[], int size_max);
     static bool read_string(int pos, String & sbuffer, int size_max);
     static bool read_buffer(int pos, byte byte_buffer[], int size_buffer);
