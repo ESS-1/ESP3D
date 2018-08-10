@@ -14,6 +14,7 @@
 #include <Wire.h>
 #include "SSD1306Wire.h"
 
+#include "timer.h"
 #include "icons/off.h"
 #include "icons/ap.h"
 #include "icons/sta.h"
@@ -42,7 +43,7 @@ private:
     char _log[SSD1306_LINES][SSD1306_CHARS_PER_LINE];
 
     uint8_t _brightness;
-    uint32_t _highBrightnessSetTime_ms;
+    Timer _dimmingTimer;
 
     void setBrightness(uint8_t brightness)
     {
@@ -51,7 +52,7 @@ private:
         _brightness = brightness;
         if (brightness >= SSD1306_BRIGHTNESS_HIGH)
         {
-            _highBrightnessSetTime_ms = millis();
+            _dimmingTimer.restart();
         }
     }
 
@@ -133,11 +134,6 @@ private:
         return changed;
     }
 
-    inline uint32_t getTimeDelta(uint32_t t0, uint32_t t) const
-    {
-        return t >= t0 ? t-t0 : 1+~t0+t;
-    };
-
     void updateBrightness()
     {
         if (_brightness <= SSD1306_BRIGHTNESS_LOW)
@@ -145,7 +141,7 @@ private:
             return;
         }
 
-        uint32_t dt = getTimeDelta(_highBrightnessSetTime_ms, millis());
+        uint32_t dt = _dimmingTimer.milliSeconds();
         if (dt < (SSD1306_DIMMING_DELAY+SSD1306_DIMMING_SLOWDOWN))
         {
             return;
@@ -171,8 +167,7 @@ public:
       _scl(scl),
       _sda(sda),
       _line_idx(0),
-      _brightness(0),
-      _highBrightnessSetTime_ms(0)
+      _brightness(0)
     {
     }
 

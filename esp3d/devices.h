@@ -10,6 +10,8 @@
 #pragma once
 
 #include <Arduino.h>
+#include "timer.h"
+
 
 // GpioDevice
 class GpioDevice
@@ -24,13 +26,11 @@ protected:
     {
     }
 
-    inline uint32_t getTimeDelta(uint32_t t0, uint32_t t) const
-    {
-        return t >= t0 ? t-t0 : 1+~t0+t;
-    };
-
 public:
-    uint8_t getPin() const;
+    inline uint8_t getPin() const
+    {
+        return _pin;
+    }
 };
 
 
@@ -47,7 +47,7 @@ private:
 
     uint16_t _tOn_ms;
     uint16_t _tOff_ms;
-    uint32_t _startTime_ms;
+    Timer _timer;
 
 public:
     GpioOutputDevice(uint8_t pin, uint8_t active = LOW);
@@ -81,12 +81,12 @@ class HoldButton : public GpioDevice
 private:
     void (*_handler)();
     uint16_t _minHoldTime_ms;
-    volatile uint32_t* _pInterruptTime;
+    Timer* _pTimer;
 
 public:
     struct IsrDef
     {
-        volatile uint32_t interruptTime;
+        Timer timer;
         uint8_t pin;
         void (*isr)();
     };
@@ -98,5 +98,5 @@ public:
 
 #define HOLDBUTTON_ISR(pin) (HoldButton_IsrDef_##pin)
 #define HOLDBUTTON_DECLARE_ISR(pin) HoldButton::IsrDef HoldButton_IsrDef_##pin\
-    = {0, pin, []{HoldButton_IsrDef_##pin.interruptTime = millis();}};
+    = {Timer(), pin, []{HoldButton_IsrDef_##pin.timer.restart();}};
 

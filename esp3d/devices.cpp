@@ -10,20 +10,12 @@
 #include "devices.h"
 
 
-// GpioDevice
-uint8_t GpioDevice::getPin() const
-{
-    return _pin;
-}
-
-
 // GpioOutputDevice
 GpioOutputDevice::GpioOutputDevice(uint8_t pin, uint8_t active /*=LOW*/)
     : GpioDevice(pin, active),
       _mode(mode_const),
       _tOn_ms(0),
-      _tOff_ms(0),
-      _startTime_ms(0)
+      _tOff_ms(0)
 {
     digitalWrite(_pin, !_active);
     pinMode(_pin, OUTPUT);
@@ -65,7 +57,7 @@ void GpioOutputDevice::blink(uint16_t tOn_ms, uint16_t tOff_ms)
     _tOn_ms = tOn_ms;
     _tOff_ms = tOff_ms;
 
-    _startTime_ms = millis();
+    _timer.restart();
     digitalWrite(_pin, _active);
 }
 
@@ -80,7 +72,7 @@ void GpioOutputDevice::pulse(uint16_t tPulse_ms)
     _mode = mode_pulse;
     _tOn_ms = tPulse_ms;
 
-    _startTime_ms = millis();
+    _timer.restart();
     digitalWrite(_pin, _active);
 }
 
@@ -88,8 +80,7 @@ void GpioOutputDevice::update()
 {
     if (_mode != mode_const)
     {
-        uint32_t t = millis();
-        uint32_t dt = getTimeDelta(_startTime_ms, t);
+        uint32_t dt = _timer.milliSeconds();
 
         if (_mode == mode_blink)
         {
@@ -100,7 +91,7 @@ void GpioOutputDevice::update()
             // Increase start time to avoid possible overflow
             if (dt > remainder)
             {
-                _startTime_ms += (dt-remainder);
+                _timer.adjustStart(dt-remainder);
             }
         }
         else if (dt >= _tOn_ms) // Single pulse
@@ -139,13 +130,12 @@ bool SimpleGpioOutputDevice::isOn() const
 HoldButton::HoldButton(IsrDef &isrDef, void (*handler)(), uint16_t minHoldTime_ms, uint8_t active /*=LOW*/)
     : GpioDevice(isrDef.pin, active),
       _handler(handler),
-      _minHoldTime_ms(minHoldTime_ms)
+      _minHoldTime_ms(minHoldTime_ms),
+      _pTimer(&isrDef.timer)
 {
-    _pInterruptTime = &isrDef.interruptTime;
-
     pinMode(_pin, INPUT);
 
-    (*isrDef.isr)(); // Call ISR once to update interruptTime
+    (*isrDef.isr)(); // Call ISR once to update the timer
     attachInterrupt(digitalPinToInterrupt(_pin), isrDef.isr, CHANGE);
 }
 
@@ -154,15 +144,15 @@ void HoldButton::update()
     bool isActive = (digitalRead(_pin) != 0) == (_active != 0);
 
     noInterrupts();
-    uint32_t interruptTime = (*_pInterruptTime);
+    uint32_t dt = _pTimer->milliSeconds();
     interrupts();
 
-    if (isActive && getTimeDelta(interruptTime, millis()) >= _minHoldTime_ms)
+    if (isActive && dt >= _minHoldTime_ms)
     {
         _handler();
 
         noInterrupts();
-        *_pInterruptTime = millis();
+        _pTimer->restart();
         interrupts();
     }
 }

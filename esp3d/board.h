@@ -12,12 +12,24 @@
 #include <Arduino.h>
 #include "display.h"
 #include "devices.h"
+#include "timer.h"
+
+#ifdef ARDUINO_ARCH_ESP8266
+    #include <ESP8266WiFi.h>
+#else
+    #include <WiFi.h>
+#endif
+
 
 // StatusController
 class StatusController
 {
 private:
+    wl_status_t _lastStaStatus = WL_CONNECTED;
+    Timer _updateTimer;
+
     void updateSummary();
+    void updateStatus(WiFiIcon icon, const String & descr, wl_status_t newStaStatus, bool logStaStatusChange = false);
     void updateLeds();
 
 public:

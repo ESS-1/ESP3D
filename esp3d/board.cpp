@@ -12,42 +12,41 @@
 #include "board.h"
 #include "config.h"
 
-#ifdef ARDUINO_ARCH_ESP8266
-    #include <ESP8266WiFi.h>
-#else
-    #include <WiFi.h>
-#endif
 
 // StatusController
 const char M117_[] PROGMEM = "M117 ";
 
 void StatusController::updateSummary()
 {
-    if (Board::pDisplay == NULL)
-    {
+    if (_updateTimer.milliSeconds() < 100)
+    { // Do not update summary more often than 100 ms
         return;
     }
+    _updateTimer.restart();
 
     switch (WiFi.getMode())
     {
         case WIFI_STA:
-            switch (WiFi.status())
             {
-                case WL_CONNECTED:
-                    Board::pDisplay->printSummary(WiFiIcon_Sta, WiFi.localIP().toString());
-                    break;
-                case WL_NO_SSID_AVAIL:
-                    Board::pDisplay->printSummary(WiFiIcon_Off, F("No SSID found"));
-                    break;
-                case WL_CONNECT_FAILED:
-                    Board::pDisplay->printSummary(WiFiIcon_Off, F("Connection failed"));
-                    break;
-                case WL_CONNECTION_LOST:
-                    Board::pDisplay->printSummary(WiFiIcon_Off, F("Connection lost"));
-                    break;
-                default:
-                    Board::pDisplay->printSummary(WiFiIcon_Sta, F("..."));
-                    break;
+                wl_status_t status = WiFi.status();
+                switch (status)
+                {
+                    case WL_CONNECTED:
+                        updateStatus(WiFiIcon_Sta, WiFi.localIP().toString(), status, true);
+                        break;
+                    case WL_NO_SSID_AVAIL:
+                        updateStatus(WiFiIcon_Off, F("No SSID found"), status, true);
+                        break;
+                    case WL_CONNECT_FAILED:
+                        updateStatus(WiFiIcon_Off, F("Connection failed"), status, true);
+                        break;
+                    case WL_CONNECTION_LOST:
+                        updateStatus(WiFiIcon_Off, F("Connection lost"), status, true);
+                        break;
+                    default:
+                        updateStatus(WiFiIcon_Sta, F("..."), status);
+                        break;
+                }
             }
             break;
 
@@ -56,15 +55,31 @@ void StatusController::updateSummary()
             {
                 char sbuf[MAX_SSID_LENGTH+1];
                 if (CONFIG::read_string(EP_AP_SSID, sbuf, MAX_SSID_LENGTH))
-                    Board::pDisplay->printSummary(WiFiIcon_Ap, sbuf);
+                    updateStatus(WiFiIcon_Ap, sbuf, WL_DISCONNECTED);
                 else
-                    Board::pDisplay->printSummary(WiFiIcon_Ap, F("Can't get SSID"));
+                    updateStatus(WiFiIcon_Ap, F("Can't get SSID"), WL_DISCONNECTED);
             }
             break;
 
         default:
-            Board::pDisplay->printSummary(WiFiIcon_Off, F("WiFi off"));
+            updateStatus(WiFiIcon_Off, F("WiFi off"), WL_DISCONNECTED);
             break;
+    }
+}
+
+void StatusController::updateStatus(WiFiIcon icon, const String & descr, wl_status_t newStaStatus, bool logStaStatusChange /*=false*/)
+{
+    if (Board::pDisplay != NULL)
+    {
+        Board::pDisplay->printSummary(icon, descr);
+    }
+
+    bool staStatusChanged = (newStaStatus != _lastStaStatus);
+    _lastStaStatus = newStaStatus;
+
+    if (logStaStatusChange && staStatusChanged)
+    {
+        print(descr);
     }
 }
 
