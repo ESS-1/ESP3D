@@ -19,12 +19,12 @@
 #include "icons/sta.h"
 
 #define SSD1306_LINES            (5)
-#define SSD1306_CHARS_PER_LINE   (48)   // includes NULL
+#define SSD1306_CHARS_PER_LINE   (48)    // includes NULL
 
 #define SSD1306_BRIGHTNESS_HIGH  (0xF0)
 #define SSD1306_BRIGHTNESS_LOW   (0x00)
-#define SSD1306_DIMMING_DELAY    (7000) // ms
-#define SSD1306_DIMMING_SLOWDOWN (12)   // ms per brightness unit
+#define SSD1306_DIMMING_DELAY    (10000) // ms
+#define SSD1306_DIMMING_SLOWDOWN (35)    // ms per brightness unit
 
 #define SSD1306_PRECHARGE        (0x11)
 #define SSD1306_COM_DESELECT     (0x20)
