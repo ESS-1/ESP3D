@@ -1522,7 +1522,7 @@ WEBINTERFACE_CLASS::WEBINTERFACE_CLASS (int port):web_server(port)
     web_server.onNotFound( handle_not_found);
     blockserial = false;
     restartmodule=false;
-    //rolling list of 4entries with a maximum of 50 char for each entry
+    //rolling list of 4 entries with a maximum of 50 char for each entry
 #ifdef ERROR_MSG_FEATURE
     error_msg.setsize(4);
     error_msg.setlength(50);
