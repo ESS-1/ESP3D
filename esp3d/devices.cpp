@@ -139,15 +139,18 @@ HoldButton::HoldButton(IsrDef &isrDef, void (*handler)(), uint16_t minHoldTime_m
     attachInterrupt(digitalPinToInterrupt(_pin), isrDef.isr, CHANGE);
 }
 
+bool HoldButton::isPressed()
+{
+    return (digitalRead(_pin) != 0) == (_active != 0);
+}
+
 void HoldButton::update()
 {
-    bool isActive = (digitalRead(_pin) != 0) == (_active != 0);
-
     noInterrupts();
     uint32_t dt = _pTimer->milliSeconds();
     interrupts();
 
-    if (isActive && dt >= _minHoldTime_ms)
+    if (isPressed() && dt >= _minHoldTime_ms)
     {
         _handler();
 
