@@ -220,10 +220,20 @@ StatusController Board::status = StatusController();
 // Board - methods
 void Board::resetSettings()
 {
+    ESP.wdtFeed();
     if (pLedR != NULL) pLedR->on();
-    if (pLedG != NULL) pLedG->on();
-    if (pLedB != NULL) pLedB->on();
 
+    // Give a user 2.5 seconds to release the button
+    status.print(F("Hold to clr. cfg."));
+    delay(2500);
+    if (pResetButton != NULL &&
+        !pResetButton->isPressed())
+    {
+        status.print(F("Canceled"));
+        return;
+    }
+
+    ESP.wdtFeed();
     CONFIG::reset_config();
     CONFIG::esp_restart();
 }
