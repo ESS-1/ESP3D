@@ -1215,9 +1215,9 @@ bool CONFIG::write_string(int pos, const char * byte_buffer)
 
     //0 terminal
     eepromAccessor.write(pos + size_buffer, 0x00);
+    Board::status.print(String(F("Cfg. updated [S]"))+pos);
     eepromAccessor.close();
 
-    Board::status.print(String(F("Cfg. updated [S]"))+pos);
     return true;
 }
 
@@ -1235,9 +1235,9 @@ bool CONFIG::write_buffer(int pos, const byte * byte_buffer, int size_buffer)
     for (int i = 0; i < size_buffer; i++) {
         eepromAccessor.write(pos + i, byte_buffer[i]);
     }
+    Board::status.print(String(F("Cfg. updated [*]"))+pos);
     eepromAccessor.close();
 
-    Board::status.print(String(F("Cfg. updated [*]"))+pos);
     return true;
 }
 
@@ -1252,9 +1252,9 @@ bool CONFIG::write_byte(int pos, const byte value)
 
     EEPROMAccessor eepromAccessor = beginBulkAccess();
     eepromAccessor.write(pos, value);
+    Board::status.print(String(F("Cfg. updated [B]"))+pos);
     eepromAccessor.close();
 
-    Board::status.print(String(F("Cfg. updated [B]"))+pos);
     return true;
 }
 
