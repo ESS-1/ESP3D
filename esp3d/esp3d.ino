@@ -25,8 +25,9 @@
 */
 //be sure correct IDE and settings are used for ESP8266 or ESP32
 #if !(defined( ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32))
-#error Oops!  Make sure you have 'ESP8266 or ESP32' compatible board selected from the 'Tools -> Boards' menu.
+  #error Oops!  Make sure you have 'ESP8266 or ESP32' compatible board selected from the 'Tools -> Boards' menu.
 #endif
+
 #include <EEPROM.h>
 #include "board.h"
 #include "config.h"
@@ -34,46 +35,48 @@
 #include "bridge.h"
 #include "webinterface.h"
 #include "command.h"
-#ifdef ARDUINO_ARCH_ESP8266
-#include "ESP8266WiFi.h"
-#ifdef MDNS_FEATURE
-#include <ESP8266mDNS.h>
-#endif
-#include <ESP8266WebServer.h>
-#else
-#include <WiFi.h>
-#ifdef MDNS_FEATURE
-#include <ESPmDNS.h>
-#endif
-#include "esp_wifi.h"
-#include <WebServer.h>
-#include "FS.h"
-#include "SPIFFS.h"
-#include "Update.h"
-#endif
-#include <WiFiClient.h>
 
+#ifdef ARDUINO_ARCH_ESP8266
+  #include "ESP8266WiFi.h"
+  #ifdef MDNS_FEATURE
+    #include <ESP8266mDNS.h>
+  #endif
+  #include <ESP8266WebServer.h>
+#else
+  #include <WiFi.h>
+  #ifdef MDNS_FEATURE
+    #include <ESPmDNS.h>
+  #endif
+  #include "esp_wifi.h"
+  #include <WebServer.h>
+  #include "FS.h"
+  #include "SPIFFS.h"
+  #include "Update.h"
+#endif
+
+#include <WiFiClient.h>
+#include <algorithm>
 
 #ifdef CAPTIVE_PORTAL_FEATURE
-#include <DNSServer.h>
-extern DNSServer dnsServer;
+  #include <DNSServer.h>
+  extern DNSServer dnsServer;
 #endif
 #ifdef SSDP_FEATURE
-#ifdef ARDUINO_ARCH_ESP8266
-#include <ESP8266SSDP.h>
-#else
-//#include <ESPSSDP.h>
-#endif
+  #ifdef ARDUINO_ARCH_ESP8266
+    #include <ESP8266SSDP.h>
+  #else
+    //#include <ESPSSDP.h>
+  #endif
 #endif
 #ifdef NETBIOS_FEATURE
-#ifdef ARDUINO_ARCH_ESP8266
-#include <ESP8266NetBIOS.h>
-#else
-//#include <ESPNetBIOS.h>
-#endif
+  #ifdef ARDUINO_ARCH_ESP8266
+    #include <ESP8266NetBIOS.h>
+  #else
+    //#include <ESPNetBIOS.h>
+  #endif
 #endif
 #ifndef FS_NO_GLOBALS
-#define FS_NO_GLOBALS
+  #define FS_NO_GLOBALS
 #endif
 #include <FS.h>
 
@@ -107,9 +110,9 @@ void setup()
     // Show displahy test pattern for 1.25 seconds and wait remaining part of BRD_POWERON_DELAY
     {
         const int patternDisplayTime = 1250;
-        delay(min(BRD_POWERON_DELAY, patternDisplayTime));
+        delay(std::min(BRD_POWERON_DELAY, patternDisplayTime));
         Board::status.print(F("Loading..."));
-        delay(max(BRD_POWERON_DELAY-patternDisplayTime, 0));
+        delay(std::max(BRD_POWERON_DELAY-patternDisplayTime, 0));
     }
 
     CONFIG::InitDirectSD();
