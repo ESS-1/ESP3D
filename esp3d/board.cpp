@@ -220,7 +220,6 @@ StatusController Board::status = StatusController();
 // Board - methods
 void Board::resetSettings()
 {
-    ESP.wdtFeed();
     if (pLedR != NULL) pLedR->on();
 
     // Give a user 2.5 seconds to release the button
@@ -233,7 +232,6 @@ void Board::resetSettings()
         return;
     }
 
-    ESP.wdtFeed();
     CONFIG::reset_config();
     CONFIG::esp_restart();
 }
