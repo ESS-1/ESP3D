@@ -20,7 +20,7 @@
 #include "icons/sta.h"
 
 #define SSD1306_LINES            (5)
-#define SSD1306_CHARS_PER_LINE   (48)    // includes NULL
+#define SSD1306_CHARS_PER_LINE   (36)    // includes NULL
 
 #define SSD1306_BRIGHTNESS_HIGH  (0xF0)
 #define SSD1306_BRIGHTNESS_LOW   (0x00)
@@ -186,8 +186,9 @@ public:
         Wire.write(0x80);
         Wire.write(0xD5);
         Wire.write(0x80);
-        Wire.write(0x80);//todo
+        Wire.write(0x80);
         Wire.endTransmission();
+//TODO:        _display.setClockDiv(0x80);
 
         _display.displayOn();
 
