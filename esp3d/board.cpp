@@ -173,7 +173,7 @@ StatusController Board::status = StatusController();
 #endif
 
 #ifdef PIN_OUT_PRINTER_RESET
-    GpioOutputDevice cPrinterReset = (PIN_OUT_PRINTER_RESET);
+    GpioOutputDevice cPrinterReset(PIN_OUT_PRINTER_RESET, HIGH);
     GpioOutputDevice* const Board::pPrinterReset = &cPrinterReset;
 #else
     GpioOutputDevice* const Board::pPrinterReset = NULL;
