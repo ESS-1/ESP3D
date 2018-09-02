@@ -99,6 +99,12 @@ returns an integer value in mV
 supported only for boards with voltage monitor
 [ESP451]
 
+* Turn printer UART-port on or off
+Supported only for boards with printer port switch.
+When parameters are empty, the command returns current state
+of the printer port switch.
+[ESP452][<on/off>]
+
 * Change / Reset user password
 [ESP555]<password>pwd=<admin password>
 if no password set it use default one

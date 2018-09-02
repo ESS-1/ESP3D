@@ -1263,25 +1263,46 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
         break;
     //Reset printer
     //[ESP450]
-    case 450: {
+    case 450:
         if (Board::pPrinterReset != NULL) {
             BRIDGE::printStatus(F("Resetting printer..."), output);
             Board::pPrinterReset->pulse(500);
         } else {
             BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
+            response = false;
         }
-    }
-    break;
+        break;
     //Measure supply voltage
     //[ESP451]
-    case 451: {
+    case 451:
         if (Board::pVoltageMonitor != NULL) {
             BRIDGE::println(String(Board::pVoltageMonitor->getVoltage_mV()), output);
         } else {
             BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
+            response = false;
         }
-    }
-    break;
+        break;
+    // Turn printer UART-port on or off
+    //[ESP452][<on/off>]
+    case 452:
+        if (Board::pPrinterPortSwitch != NULL) {
+            parameter = get_param(cmd_params,"", true);
+            if (parameter == "on") {
+                Board::pPrinterPortSwitch->on();
+            } else if (parameter == "off") {
+                Board::pPrinterPortSwitch->off();
+            } else if (parameter == "") {
+                // Get current state
+                BRIDGE::println(Board::pPrinterPortSwitch->isOn() ? "on" : "off", output);
+            } else {
+                BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
+                response = false;
+            }
+        } else {
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
+            response = false;
+        }
+        break;
 #ifdef AUTHENTICATION_FEATURE
     //Change / Reset user password
     //[ESP555]<password>pwd=<admin password>
