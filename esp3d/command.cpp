@@ -1037,12 +1037,80 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             BRIDGE::print(F("\",\"H\":\"Camera address\",\"M\":\""), output);
             BRIDGE::print((const char *)CONFIG::intTostr(MIN_DATA_LENGTH), output);
             BRIDGE::print(F("\"}"), output);
-        }
+            BRIDGE::println(F(","), output);
 
+            if (Board::pVoltageMonitor != NULL) {
+                // Voltage monitor correction
+                BRIDGE::print(F("{\"F\":\"printer\",\"P\":\""), output);
+                BRIDGE::print((const char *)CONFIG::intTostr(EP_VMON_CORRECTION_PPM), output);
+                BRIDGE::print(F("\",\"T\":\"I\",\"V\":\""), output);
+                if (!CONFIG::read_buffer(EP_VMON_CORRECTION_PPM, (byte *)&ibuf, INTEGER_LENGTH)) {
+                    BRIDGE::print(F("???"), output);
+                } else {
+                    BRIDGE::print((const char *)CONFIG::intTostr(ibuf), output);
+                }
+                BRIDGE::print(F("\",\"H\":\"Voltage Monitor Correction (ppm)\",\"S\":\""), output);
+                BRIDGE::print((const char *)CONFIG::intTostr(DEFAULT_MAX_VMON_CORRECTION_PPM), output);
+                BRIDGE::print(F("\",\"M\":\""), output);
+                BRIDGE::print((const char *)CONFIG::intTostr(DEFAULT_MIN_VMON_CORRECTION_PPM), output);
+                BRIDGE::print(F("\"}"), output);
+                BRIDGE::println(F(","), output);
+
+                // Voltage monitor target voltage
+                BRIDGE::print(F("{\"F\":\"printer\",\"P\":\""), output);
+                BRIDGE::print((const char *)CONFIG::intTostr(EP_VMON_TARGET_VOLTAGE_mV), output);
+                BRIDGE::print(F("\",\"T\":\"I\",\"V\":\""), output);
+                if (!CONFIG::read_buffer(EP_VMON_TARGET_VOLTAGE_mV, (byte *)&ibuf, INTEGER_LENGTH)) {
+                    BRIDGE::print(F("???"), output);
+                } else {
+                    BRIDGE::print((const char *)CONFIG::intTostr(ibuf), output);
+                }
+                BRIDGE::print(F("\",\"H\":\"Voltage Monitor Target Voltage (mV)\",\"S\":\""), output);
+                BRIDGE::print((const char *)CONFIG::intTostr(DEFAULT_MAX_VMON_TARGET_VOLTAGE_mV), output);
+                BRIDGE::print(F("\",\"M\":\""), output);
+                BRIDGE::print((const char *)CONFIG::intTostr(DEFAULT_MIN_VMON_TARGET_VOLTAGE_mV), output);
+                BRIDGE::print(F("\"}"), output);
+                BRIDGE::println(F(","), output);
+
+                // Voltage monitor alarm threshold in percent
+                BRIDGE::print(F("{\"F\":\"printer\",\"P\":\""), output);
+                BRIDGE::print((const char *)CONFIG::intTostr(EP_VMON_ALARM_THRESHOLD), output);
+                BRIDGE::print(F("\",\"T\":\"B\",\"V\":\""), output);
+                if (!CONFIG::read_byte(EP_VMON_ALARM_THRESHOLD, &bbuf )) {
+                    BRIDGE::print(F("???"), output);
+                } else {
+                    BRIDGE::print((const char *)CONFIG::intTostr(bbuf), output);
+                }
+                BRIDGE::print(F("\",\"H\":\"Voltage Monitor Alarm Threshold (%)\",\"S\":\""), output);
+                BRIDGE::print((const char *)CONFIG::intTostr(DEFAULT_MAX_VMON_ALARM_THRESHOLD), output);
+                BRIDGE::print(F("\",\"M\":\""), output);
+                BRIDGE::print((const char *)CONFIG::intTostr(DEFAULT_MIN_VMON_ALARM_THRESHOLD), output);
+                BRIDGE::print(F("\"}"), output);
+            }
+        }
+        //end EEPROM
+        BRIDGE::println(F("],\n"), output);
         bulkAccessor.close();
 
+        //Write hardware configuration
+        BRIDGE::print(F("\"Hardware\":{"), output);
+        {
+            //Printer reset output
+            BRIDGE::print(F("\"PrinterReset\":\""), output);
+            BRIDGE::print(Board::pPrinterReset != NULL ? F("1") : F("0"), output);
+            BRIDGE::print(F("\","), output);
+            //Printer UART port switch
+            BRIDGE::print(F("\"PrinterPortSwitch\":\""), output);
+            BRIDGE::print(Board::pPrinterPortSwitch != NULL ? F("1") : F("0"), output);
+            BRIDGE::print(F("\","), output);
+            //Printer main supply voltage monitor
+            BRIDGE::print(F("\"VoltageMonitor\":\""), output);
+            BRIDGE::print(Board::pVoltageMonitor != NULL ? F("1") : F("0"), output);
+            BRIDGE::print(F("\""), output);
+        }
+
         //end JSON
-        BRIDGE::println(F("\n]}"), output);
+        BRIDGE::println(F("}}"), output);
         delay(0);
     }
     break;
@@ -1193,6 +1261,27 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             }
         }
         break;
+    //Reset printer
+    //[ESP450]
+    case 450: {
+        if (Board::pPrinterReset != NULL) {
+            BRIDGE::printStatus(F("Resetting printer..."), output);
+            Board::pPrinterReset->pulse(500);
+        } else {
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
+        }
+    }
+    break;
+    //Measure supply voltage
+    //[ESP451]
+    case 451: {
+        if (Board::pVoltageMonitor != NULL) {
+            BRIDGE::println(String(Board::pVoltageMonitor->getVoltage_mV()), output);
+        } else {
+            BRIDGE::printStatus(INCORRECT_CMD_MSG, output);
+        }
+    }
+    break;
 #ifdef AUTHENTICATION_FEATURE
     //Change / Reset user password
     //[ESP555]<password>pwd=<admin password>

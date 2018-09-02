@@ -67,7 +67,7 @@ if RAW=YES do not set pinmode just read value
 *Get data string
 [ESP301] pwd=<user/admin password>
 
-*Get full EEPROM settings content
+*Get full EEPROM settings content and WiFi board hardware configuration
 but do not give any passwords
 can filter if only need wifi or printer 
 [ESP400]<network/printer>
@@ -89,6 +89,15 @@ cmd can be RESET, SAFEMODE, CONFIG, RESTART
 [ESP444]<cmd>
 if authentication is on, need admin password for RESET, RESTART and SAFEMODE
 [ESP444]<cmd>pwd=<admin password>
+
+* Reset printer
+supported only for boards with printer reset output
+[ESP450]
+
+* Measure supply voltage
+returns an integer value in mV
+supported only for boards with voltage monitor
+[ESP451]
 
 * Change / Reset user password
 [ESP555]<password>pwd=<admin password>

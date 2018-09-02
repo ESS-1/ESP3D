@@ -216,52 +216,55 @@ typedef enum {
 
 //position in EEPROM
 //AP mode = 1; Station client mode = 2
-#define EP_WIFI_MODE			0    //1 byte = flag
-#define EP_STA_SSID				1    //33 bytes 32+1 = string  ; warning does not support multibyte char like chinese
-#define EP_STA_PASSWORD			34   //65 bytes 64 +1 = string ;warning does not support multibyte char like chinese
-#define EP_STA_IP_MODE			99   //1 byte = flag
-#define EP_STA_IP_VALUE			100  //4  bytes xxx.xxx.xxx.xxx
-#define EP_STA_MASK_VALUE			104  //4  bytes xxx.xxx.xxx.xxx
-#define EP_STA_GATEWAY_VALUE			108  //4  bytes xxx.xxx.xxx.xxx
-#define EP_BAUD_RATE			112  //4  bytes = int
-#define EP_STA_PHY_MODE			116  //1 byte = flag
-#define EP_SLEEP_MODE			117  //1 byte = flag
-#define EP_CHANNEL			118 //1 byte = flag
-#define EP_AUTH_TYPE			119 //1 byte = flag
-#define EP_SSID_VISIBLE			120 //1 byte = flag
-#define EP_WEB_PORT			121 //4  bytes = int
-#define EP_DATA_PORT			125 //4  bytes = int
-#define EP_REFRESH_PAGE_TIME			129 //1  bytes = flag
-#define EP_HOSTNAME				130//33 bytes 32+1 = string  ; warning does not support multibyte char like chinese
-#define EP_XY_FEEDRATE		    164//4  bytes = int
-#define EP_Z_FEEDRATE		    168//4  bytes = int
-#define EP_E_FEEDRATE		    172//4  bytes = int
-#define EP_ADMIN_PWD		    176//21  bytes 20+1 = string  ; warning does not support multibyte char like chinese
-#define EP_USER_PWD		    197//21  bytes 20+1 = string  ; warning does not support multibyte char like chinese
-#define EP_AP_SSID				218    //33 bytes 32+1 = string  ; warning does not support multibyte char like chinese
-#define EP_AP_PASSWORD			251   //65 bytes 64 +1 = string ;warning does not support multibyte char like chinese
-#define EP_AP_IP_VALUE			316  //4  bytes xxx.xxx.xxx.xxx
-#define EP_AP_MASK_VALUE			320  //4  bytes xxx.xxx.xxx.xxx
-#define EP_AP_GATEWAY_VALUE			324  //4  bytes xxx.xxx.xxx.xxx
-#define EP_AP_IP_MODE			329   //1 byte = flag
-#define EP_AP_PHY_MODE			330  //1 byte = flag
-#define EP_DATA_STRING			331  //129 bytes 128+1 = string  ; warning does not support multibyte char like chinese
-#define EP_REFRESH_PAGE_TIME2		460 //1  bytes = flag
-#define EP_TARGET_FW		461 //1  bytes = flag
-#define EP_TIMEZONE         462//1  bytes = flag
-#define EP_TIME_ISDST       463//1  bytes = flag
-#define EP_TIME_SERVER1 464//129 bytes 128+1 = string  ; warning does not support multibyte char like chinese  
-#define EP_TIME_SERVER2  593 //129 bytes 128+1 = string  ; warning does not support multibyte char like chinese
-#define EP_TIME_SERVER3  722 //129 bytes 128+1 = string  ; warning does not support multibyte char like chinese
-#define EP_IS_DIRECT_SD   850//1  bytes = flag
-#define EP_PRIMARY_SD   851//1  bytes = flag
-#define EP_SECONDARY_SD   852//1  bytes = flag
-#define EP_DIRECT_SD_CHECK   853//1  bytes = flag
-#define EP_SD_CHECK_UPDATE_AT_BOOT   854//1  bytes = flag
+#define EP_WIFI_MODE               0   //  1 byte = flag
+#define EP_STA_SSID                1   // 33 bytes 32+1 = string; warning: does not support multibyte char like chinese
+#define EP_STA_PASSWORD            34  // 65 bytes 64+1 = string; warning: does not support multibyte char like chinese
+#define EP_STA_IP_MODE             99  //  1 byte = flag
+#define EP_STA_IP_VALUE            100 //  4 bytes xxx.xxx.xxx.xxx
+#define EP_STA_MASK_VALUE          104 //  4 bytes xxx.xxx.xxx.xxx
+#define EP_STA_GATEWAY_VALUE       108 //  4 bytes xxx.xxx.xxx.xxx
+#define EP_BAUD_RATE               112 //  4 bytes = int
+#define EP_STA_PHY_MODE            116 //  1 byte = flag
+#define EP_SLEEP_MODE              117 //  1 byte = flag
+#define EP_CHANNEL                 118 //  1 byte = flag
+#define EP_AUTH_TYPE               119 //  1 byte = flag
+#define EP_SSID_VISIBLE            120 //  1 byte = flag
+#define EP_WEB_PORT                121 //  4 bytes = int
+#define EP_DATA_PORT               125 //  4 bytes = int
+#define EP_REFRESH_PAGE_TIME       129 //  1 bytes = flag
+#define EP_HOSTNAME                130 // 33 bytes 32+1 = string; warning: does not support multibyte char like chinese
+#define EP_XY_FEEDRATE             164 //  4 bytes = int
+#define EP_Z_FEEDRATE              168 //  4 bytes = int
+#define EP_E_FEEDRATE              172 //  4 bytes = int
+#define EP_ADMIN_PWD               176 // 21 bytes 20+1 = string; warning: does not support multibyte char like chinese
+#define EP_USER_PWD                197 // 21 bytes 20+1 = string; warning: does not support multibyte char like chinese
+#define EP_AP_SSID                 218 // 33 bytes 32+1 = string; warning: does not support multibyte char like chinese
+#define EP_AP_PASSWORD             251 // 65 bytes 64+1 = string; warning: does not support multibyte char like chinese
+#define EP_AP_IP_VALUE             316 //  4 bytes xxx.xxx.xxx.xxx
+#define EP_AP_MASK_VALUE           320 //  4 bytes xxx.xxx.xxx.xxx
+#define EP_AP_GATEWAY_VALUE        324 //  4 bytes xxx.xxx.xxx.xxx
+#define EP_AP_IP_MODE              329 //  1 byte = flag
+#define EP_AP_PHY_MODE             330 //  1 byte = flag
+#define EP_DATA_STRING             331 //129 bytes 128+1 = string; warning does not support multibyte char like chinese
+#define EP_REFRESH_PAGE_TIME2      460 //  1 bytes = flag
+#define EP_TARGET_FW               461 //  1 bytes = flag
+#define EP_TIMEZONE                462 //  1 bytes = flag
+#define EP_TIME_ISDST              463 //  1 bytes = flag
+#define EP_TIME_SERVER1            464 //129 bytes 128+1 = string; warning does not support multibyte char like chinese  
+#define EP_TIME_SERVER2            593 //129 bytes 128+1 = string; warning does not support multibyte char like chinese
+#define EP_TIME_SERVER3            722 //129 bytes 128+1 = string; warning does not support multibyte char like chinese
+#define EP_IS_DIRECT_SD            850 //  1 bytes = flag
+#define EP_PRIMARY_SD              851 //  1 bytes = flag
+#define EP_SECONDARY_SD            852 //  1 bytes = flag
+#define EP_DIRECT_SD_CHECK         853 //  1 bytes = flag
+#define EP_SD_CHECK_UPDATE_AT_BOOT 854 //  1 bytes = flag
+#define EP_VMON_CORRECTION_PPM     855 //  4 bytes = int32_t; in ppm (0.0001%)
+#define EP_VMON_TARGET_VOLTAGE_mV  859 //  4 bytes = int32_t; target voltage in mV
+#define EP_VMON_ALARM_THRESHOLD    863 //  1 byte  = uint8_t; alarm threshold in %; set 0 to disable
 
-#define LAST_EEPROM_ADDRESS 855
-//next available is 855
-//space left 1024 - 855 = 169
+#define LAST_EEPROM_ADDRESS 863
+//next available is 864
+//space left 1024 - 864 = 160
 
 //default values
 #define DEFAULT_WIFI_MODE			AP_MODE
@@ -295,6 +298,9 @@ const char DEFAULT_USER_LOGIN []  PROGMEM =	"user";
 const char DEFAULT_TIME_SERVER1 []  PROGMEM =	"time.nist.gov";
 const char DEFAULT_TIME_SERVER2 []  PROGMEM =	"0.pool.ntp.org";
 const char DEFAULT_TIME_SERVER3 []  PROGMEM =	"1.pool.ntp.org";
+const int32_t DEFAULT_VMON_CORRECTION_PPM    = 0;
+const int32_t DEFAULT_VMON_TARGET_VOLTAGE_mV = 12000;
+const int32_t DEFAULT_VMON_ALARM_THRESHOLD   = 0;
 #define DEFAULT_TIME_ZONE			0
 #define DEFAULT_TIME_DST			0
 #define DEFAULT_PRIMARY_SD  1
@@ -350,7 +356,10 @@ const uint16_t Setting[][2] = {
     {EP_PRIMARY_SD, LEVEL_USER},//38
     {EP_SECONDARY_SD, LEVEL_USER},//39
     {EP_DIRECT_SD_CHECK, LEVEL_USER}, //40
-    {EP_SD_CHECK_UPDATE_AT_BOOT, LEVEL_USER} //41
+    {EP_SD_CHECK_UPDATE_AT_BOOT, LEVEL_USER}, //41
+    {EP_VMON_CORRECTION_PPM, LEVEL_ADMIN}, //42
+    {EP_VMON_TARGET_VOLTAGE_mV, LEVEL_ADMIN}, //43
+    {EP_VMON_ALARM_THRESHOLD, LEVEL_ADMIN} //44
 };
 #define AUTH_ENTRY_NB 42
 //values
@@ -366,6 +375,13 @@ const uint16_t Setting[][2] = {
 #define DEFAULT_MIN_WEB_PORT			1
 #define DEFAULT_MAX_DATA_PORT			65001
 #define DEFAULT_MIN_DATA_PORT			1
+#define DEFAULT_MIN_VMON_CORRECTION_PPM    (-100000)
+#define DEFAULT_MAX_VMON_CORRECTION_PPM    ( 100000)
+#define DEFAULT_MIN_VMON_TARGET_VOLTAGE_mV (   4000)
+#define DEFAULT_MAX_VMON_TARGET_VOLTAGE_mV (  28000)
+#define DEFAULT_MIN_VMON_ALARM_THRESHOLD   (      0)
+#define DEFAULT_MAX_VMON_ALARM_THRESHOLD   (     30)
+
 
 #define MAX_TRY 2000
 

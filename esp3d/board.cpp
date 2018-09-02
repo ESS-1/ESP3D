@@ -18,105 +18,143 @@ const char M117_[] PROGMEM = "M117 ";
 
 void StatusController::updateSummary()
 {
-    if (_updateTimer.milliSeconds() < 100)
-    { // Do not update summary more often than 100 ms
-        return;
+    // Get WiFi status
+    WiFiIcon icon;
+    wl_status_t newStaStatus;
+    bool logStaStatusChange;
+    String summary = getWiFiStatus(&icon, &newStaStatus, &logStaStatusChange);
+
+    if (logStaStatusChange && (newStaStatus != _lastStaStatus))
+    {
+        print(summary);
     }
-    _updateTimer.restart();
+
+    // Get VMon alarm status
+    VoltageMonitorStatus newVMonStatus = Board::pVoltageMonitor != NULL
+        ? Board::pVoltageMonitor->getStatus()
+        : VMonStatus_Ok;
+    if (newVMonStatus == VMonStatus_Undervoltage || newVMonStatus == VMonStatus_Overvoltage)
+    {
+        summary = String(newVMonStatus == VMonStatus_Undervoltage
+                     ? F("Undervoltage ")
+                     : F("Overvoltage ")) +
+                 Board::pVoltageMonitor->getVoltage_mV() + F(" mV");
+        if (newVMonStatus != _lastVMonStatus)
+        {
+            print(summary);
+        }
+    }
+
+    // Display status
+    if (Board::pDisplay != NULL)
+    {
+        Board::pDisplay->printSummary(icon, summary);
+    }
+
+    _lastStaStatus = newStaStatus;
+    _lastVMonStatus = newVMonStatus;
+}
+
+String StatusController::getWiFiStatus(WiFiIcon *pIcon, wl_status_t *pStaStatus, bool *pLogStatusChange)
+{
+    *pIcon = WiFiIcon_Off;
+    *pStaStatus = WL_DISCONNECTED;
+    *pLogStatusChange = false;
 
     switch (WiFi.getMode())
     {
         case WIFI_STA:
             {
-                wl_status_t status = WiFi.status();
-                switch (status)
+                *pStaStatus = WiFi.status();
+                switch (*pStaStatus)
                 {
                     case WL_CONNECTED:
-                        updateStatus(WiFiIcon_Sta, WiFi.localIP().toString(), status, true);
-                        break;
+                        *pIcon = WiFiIcon_Sta;
+                        *pLogStatusChange = true;
+                        return WiFi.localIP().toString();
                     case WL_NO_SSID_AVAIL:
-                        updateStatus(WiFiIcon_Off, F("No SSID found"), status, true);
-                        break;
+                        *pLogStatusChange = true;
+                        return F("No SSID found");
                     case WL_CONNECT_FAILED:
-                        updateStatus(WiFiIcon_Off, F("Connection failed"), status, true);
-                        break;
+                        *pLogStatusChange = true;
+                        return F("Connection failed");
                     case WL_CONNECTION_LOST:
-                        updateStatus(WiFiIcon_Off, F("Connection lost"), status, true);
-                        break;
+                        *pLogStatusChange = true;
+                        return F("Connection lost");
                     default:
-                        updateStatus(WiFiIcon_Sta, F("..."), status);
-                        break;
+                        *pIcon = WiFiIcon_Sta;
+                        return F("...");
                 }
             }
-            break;
 
         case WIFI_AP:
         case WIFI_AP_STA:
             {
+                *pIcon = WiFiIcon_Ap;
                 char sbuf[MAX_SSID_LENGTH+1];
                 if (CONFIG::read_string(EP_AP_SSID, sbuf, MAX_SSID_LENGTH))
-                    updateStatus(WiFiIcon_Ap, sbuf, WL_DISCONNECTED);
+                    return sbuf;
                 else
-                    updateStatus(WiFiIcon_Ap, F("Can't get SSID"), WL_DISCONNECTED);
+                    return F("Can't get SSID");
             }
-            break;
 
         default:
-            updateStatus(WiFiIcon_Off, F("WiFi off"), WL_DISCONNECTED);
-            break;
-    }
-}
-
-void StatusController::updateStatus(WiFiIcon icon, const String & descr, wl_status_t newStaStatus, bool logStaStatusChange /*=false*/)
-{
-    if (Board::pDisplay != NULL)
-    {
-        Board::pDisplay->printSummary(icon, descr);
-    }
-
-    bool staStatusChanged = (newStaStatus != _lastStaStatus);
-    _lastStaStatus = newStaStatus;
-
-    if (logStaStatusChange && staStatusChanged)
-    {
-        print(descr);
+            return F("WiFi off");
     }
 }
 
 void StatusController::updateLeds()
 {
-    if (Board::pLedR != NULL) // Error LED
+    updateErrorLed();
+    updateWiFiLed();
+}
+
+void StatusController::updateErrorLed()
+{
+    if (Board::pLedR == NULL) // Error LED
     {
-        WiFiMode_t mode = WiFi.getMode();
-        if (mode == WIFI_STA)
+        return;
+    }
+
+    if (Board::pVoltageMonitor != NULL &&
+        Board::pVoltageMonitor->getStatus() != VMonStatus_Ok)
+    {
+        Board::pLedR->blink(250);
+    }
+    else if (WiFi.getMode() == WIFI_STA)
+    {
+        switch (WiFi.status())
         {
-            switch (WiFi.status())
-            {
-                case WL_NO_SSID_AVAIL:
-                case WL_CONNECT_FAILED:
-                case WL_CONNECTION_LOST:
-                    Board::pLedR->blink(500);
-                    break;
-                default:
-                    Board::pLedR->off();
-                    break;
-            }
-        }
-        else
-        {
-            Board::pLedR->off();
+            case WL_NO_SSID_AVAIL:
+            case WL_CONNECT_FAILED:
+            case WL_CONNECTION_LOST:
+                Board::pLedR->blink(500);
+                break;
+            default:
+                Board::pLedR->off();
+                break;
         }
     }
-    if (Board::pLedB != NULL) // WiFi LED
+    else
     {
-        WiFiMode_t mode = WiFi.getMode();
-        if (mode == WIFI_STA && WiFi.isConnected())
-            Board::pLedB->on();
-        else if (mode == WIFI_AP || mode == WIFI_AP_STA)
-            Board::pLedB->blink(1500);
-        else
-            Board::pLedB->off();
+        Board::pLedR->off();
     }
+}
+
+void StatusController::updateWiFiLed()
+{
+    if (Board::pLedB == NULL) // WiFi LED
+    {
+        return;
+    }
+
+    WiFiMode_t mode = WiFi.getMode();
+    if (mode == WIFI_STA && WiFi.isConnected())
+        Board::pLedB->on();
+    else if (mode == WIFI_AP || mode == WIFI_AP_STA)
+        Board::pLedB->blink(1500);
+    else
+        Board::pLedB->off();
 }
 
 void StatusController::init()
@@ -130,8 +168,13 @@ void StatusController::init()
 
 void StatusController::update()
 {
-    updateSummary();
-    updateLeds();
+    if (_updateTimer.milliSeconds() > 100)
+    {
+        // Do not update summary more often than once per 100 ms
+        updateSummary();
+        updateLeds();
+        _updateTimer.restart();
+    }
 }
 
 void StatusController::print(const char *status, bool displayInLogOnly /*=false*/)
@@ -177,6 +220,13 @@ StatusController Board::status = StatusController();
     GpioOutputDevice* const Board::pPrinterReset = &cPrinterReset;
 #else
     GpioOutputDevice* const Board::pPrinterReset = NULL;
+#endif
+
+#ifdef PIN_ANALOG_VMON
+    VoltageMonitor cVoltageMonitor(PIN_ANALOG_VMON, VMON_DIVIDER_RATIO);
+    VoltageMonitor* const Board::pVoltageMonitor = &cVoltageMonitor;
+#else
+    VoltageMonitor* const Board::pVoltageMonitor = NULL;
 #endif
 
 #ifdef PIN_IN_SETTINGS_RESET
@@ -240,6 +290,28 @@ void Board::init()
 {
     if (pDisplay != NULL) pDisplay->init();
     status.init();
+
+    if (pVoltageMonitor != NULL)
+    {
+        bool succeded = true;
+
+        int32_t correction = DEFAULT_VMON_CORRECTION_PPM;
+        succeded &= CONFIG::read_buffer(EP_VMON_CORRECTION_PPM, (byte *)&correction, sizeof(int32_t));
+        pVoltageMonitor->setCorrection_ppm(correction);
+
+        int32_t targetVoltage = DEFAULT_VMON_TARGET_VOLTAGE_mV;
+        succeded &= CONFIG::read_buffer(EP_VMON_TARGET_VOLTAGE_mV, (byte *)&targetVoltage, sizeof(int32_t));
+        pVoltageMonitor->setTargetVoltage_mV(targetVoltage);
+
+        uint8_t alarmThreshold = DEFAULT_VMON_ALARM_THRESHOLD;
+        succeded &= CONFIG::read_byte(EP_VMON_ALARM_THRESHOLD, &alarmThreshold);
+        pVoltageMonitor->setAlarmThreshold_percent(alarmThreshold);
+
+        if (!succeded)
+        {
+            status.print(F("VMON cfg. error"));
+        }
+    }
 }
 
 void Board::update()

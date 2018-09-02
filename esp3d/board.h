@@ -12,6 +12,7 @@
 #include <Arduino.h>
 #include "display.h"
 #include "devices.h"
+#include "VoltageMonitor.h"
 #include "timer.h"
 
 #ifdef ARDUINO_ARCH_ESP8266
@@ -26,11 +27,14 @@ class StatusController
 {
 private:
     wl_status_t _lastStaStatus = WL_CONNECTED;
+    VoltageMonitorStatus _lastVMonStatus = VMonStatus_Ok;
     Timer _updateTimer;
 
     void updateSummary();
-    void updateStatus(WiFiIcon icon, const String & descr, wl_status_t newStaStatus, bool logStaStatusChange = false);
+    String getWiFiStatus(WiFiIcon *pIcon, wl_status_t *pStaStatus, bool *pLogStatusChange);
     void updateLeds();
+    void updateErrorLed();
+    void updateWiFiLed();
 
 public:
     void init();
@@ -62,6 +66,7 @@ public:
 
     static SimpleGpioOutputDevice* const pPrinterPortSwitch;
     static GpioOutputDevice* const pPrinterReset;
+    static VoltageMonitor* const pVoltageMonitor;
     static HoldButton* const pResetButton;
 
     static GpioOutputDevice* const pLedR;

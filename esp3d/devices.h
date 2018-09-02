@@ -94,7 +94,7 @@ public:
 public:
     HoldButton(IsrDef &isrDef, void (*handler)(), uint16_t minHoldTime_ms, uint8_t active = LOW);
     bool isPressed();
-    virtual void update();
+    void update();
 };
 
 #define HOLDBUTTON_ISR(pin) (HoldButton_IsrDef_##pin)

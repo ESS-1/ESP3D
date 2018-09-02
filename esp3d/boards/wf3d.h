@@ -16,6 +16,9 @@
 #define PIN_OUT_PRINTER_RESET (15)
 #define PIN_IN_SETTINGS_RESET (0)
 
+#define PIN_ANALOG_VMON       (0)
+#define VMON_DIVIDER_RATIO    (28)
+
 #define BRD_POWERON_DELAY     (3000)
 
 #define DISPLAY_SSD1306

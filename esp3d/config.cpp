@@ -685,7 +685,29 @@ bool CONFIG::update_settings(){
                         }
                     }
                 }
-                
+
+                //voltage monitor correction (ppm) = 0
+                if (espconfig.getValue("printer", "vmon_correction", buffer, bufferLen, itmp)) {
+                    if(!CONFIG::write_buffer(EP_VMON_CORRECTION_PPM, (const byte *)&itmp, INTEGER_LENGTH)) {
+                        success = false;
+                    }
+                }
+
+                //voltage monitor target voltage (mV) = 12,000
+                if (espconfig.getValue("printer", "vmon_target", buffer, bufferLen, itmp)) {
+                    if(!CONFIG::write_buffer(EP_VMON_TARGET_VOLTAGE_mV, (const byte *)&itmp, INTEGER_LENGTH)) {
+                        success = false;
+                    }
+                }
+
+                //voltage monitor alarm threshold (%) = 0 (disabled)
+                if (espconfig.getValue("printer", "vmon_threshold", buffer, bufferLen, itmp)) {
+                    bflag = itmp;
+                    if(!CONFIG::write_byte(EP_VMON_ALARM_THRESHOLD, bflag)) {
+                        success = false;
+                    }
+                }
+
                 //primary sd directory
                 if (espconfig.getValue("printer", "primary_sd ", buffer, bufferLen)) {
                     stmp = buffer;
@@ -1307,7 +1329,10 @@ bool CONFIG::reset_config()
         write_byte(EP_SD_CHECK_UPDATE_AT_BOOT, DEFAULT_SD_CHECK_UPDATE_AT_BOOT) &&
         write_string(EP_TIME_SERVER1,FPSTR(DEFAULT_TIME_SERVER1)) &&
         write_string(EP_TIME_SERVER2,FPSTR(DEFAULT_TIME_SERVER2)) &&
-        write_string(EP_TIME_SERVER3,FPSTR(DEFAULT_TIME_SERVER3));
+        write_string(EP_TIME_SERVER3,FPSTR(DEFAULT_TIME_SERVER3)) &&
+        write_buffer(EP_VMON_CORRECTION_PPM, (const byte *)&DEFAULT_VMON_CORRECTION_PPM, INTEGER_LENGTH) &&
+        write_buffer(EP_VMON_TARGET_VOLTAGE_mV, (const byte *)&DEFAULT_VMON_TARGET_VOLTAGE_mV, INTEGER_LENGTH) &&
+        write_byte(EP_VMON_ALARM_THRESHOLD, DEFAULT_VMON_ALARM_THRESHOLD);
     eepromAccessor.close();
 
     return succeeded;
@@ -1808,31 +1833,47 @@ void CONFIG::print_config(tpipe output, bool plaintext)
 
     if (!plaintext)BRIDGE::print(F("\"settings reset button\":\""), output);
     else BRIDGE::print(F("Settings reset button: "), output);
-#ifdef PIN_IN_SETTINGS_RESET
-    BRIDGE::print(F("Enabled"), output);
-#else
-    BRIDGE::print(F("Disabled"), output);
-#endif
+    BRIDGE::print(Board::pResetButton != NULL
+        ? F("Enabled")
+        : F("Disabled"), output);
     if (!plaintext)BRIDGE::print(F("\","), output);
     else BRIDGE::print(F("\n"), output);
 
     if (!plaintext)BRIDGE::print(F("\"printer reset output\":\""), output);
     else BRIDGE::print(F("Printer reset output: "), output);
-#ifdef PIN_OUT_PRINTER_RESET
-    BRIDGE::print(F("Enabled"), output);
-#else
-    BRIDGE::print(F("Disabled"), output);
-#endif
+    BRIDGE::print(Board::pPrinterReset != NULL
+        ? F("Enabled")
+        : F("Disabled"), output);
+    if (!plaintext)BRIDGE::print(F("\","), output);
+    else BRIDGE::print(F("\n"), output);
+
+    if (!plaintext)BRIDGE::print(F("\"voltage monitor\":\""), output);
+    else BRIDGE::print(F("Voltage monitor: "), output);
+    if (Board::pVoltageMonitor != NULL)
+    {
+        VoltageMonitorStatus status = Board::pVoltageMonitor->getStatus();
+        BRIDGE::print(String(F("Enabled (")) +
+                      Board::pVoltageMonitor->getVoltage_mV() +
+                      String(F(" mV - ")), output);
+        if (status == VMonStatus_Undervoltage) {
+            BRIDGE::print(F("undervoltage"), output);
+        } else if (status == VMonStatus_Overvoltage) {
+            BRIDGE::print(F("overvoltage"), output);
+        } else {
+            BRIDGE::print(F("OK"), output);
+        }
+        BRIDGE::print(F(")"), output);
+    }
+    else BRIDGE::print(F("Disabled"), output);
+
     if (!plaintext)BRIDGE::print(F("\","), output);
     else BRIDGE::print(F("\n"), output);
 
     if (!plaintext)BRIDGE::print(F("\"UART switch\":\""), output);
     else BRIDGE::print(F("UART switch: "), output);
-#ifdef PIN_OUT_UART_SWITCH
-    BRIDGE::print(F("Enabled"), output);
-#else
-    BRIDGE::print(F("Disabled"), output);
-#endif
+    BRIDGE::print(Board::pPrinterPortSwitch != NULL
+        ? F("Enabled")
+        : F("Disabled"), output);
     if (!plaintext)BRIDGE::print(F("\","), output);
     else BRIDGE::print(F("\n"), output);
 
