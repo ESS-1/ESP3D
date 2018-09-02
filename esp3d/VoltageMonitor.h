@@ -37,5 +37,6 @@ public:
     void setAlarmThreshold_percent(uint8_t threshold);
     int32_t getVoltage_uV();
     int32_t getVoltage_mV();
+    String formatVoltage();
     VoltageMonitorStatus getStatus();
 };

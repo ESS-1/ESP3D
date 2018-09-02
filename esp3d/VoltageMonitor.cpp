@@ -48,6 +48,17 @@ int32_t VoltageMonitor::getVoltage_mV()
     return (getVoltage_uV()+500)/1000;
 }
 
+String VoltageMonitor::formatVoltage()
+{
+    int32_t voltage = getVoltage_mV();
+    int32_t v = voltage/1000;
+    int32_t mv = voltage%1000;
+
+    char buff[16] = {0};
+    snprintf(buff, sizeof(buff)/sizeof(buff[0]), "%d.%02d V", v, (mv+5)/10);
+    return String(buff);
+}
+
 VoltageMonitorStatus VoltageMonitor::getStatus()
 {
     if (_alarm_threshold_uV < 1)

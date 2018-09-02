@@ -1853,8 +1853,8 @@ void CONFIG::print_config(tpipe output, bool plaintext)
     {
         VoltageMonitorStatus status = Board::pVoltageMonitor->getStatus();
         BRIDGE::print(String(F("Enabled (")) +
-                      Board::pVoltageMonitor->getVoltage_mV() +
-                      String(F(" mV - ")), output);
+                      Board::pVoltageMonitor->formatVoltage() +
+                      String(F(" - ")), output);
         if (status == VMonStatus_Undervoltage) {
             BRIDGE::print(F("undervoltage"), output);
         } else if (status == VMonStatus_Overvoltage) {

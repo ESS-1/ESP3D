@@ -38,7 +38,7 @@ void StatusController::updateSummary()
         summary = String(newVMonStatus == VMonStatus_Undervoltage
                      ? F("Undervoltage ")
                      : F("Overvoltage ")) +
-                 Board::pVoltageMonitor->getVoltage_mV() + F(" mV");
+                 Board::pVoltageMonitor->formatVoltage();
         if (newVMonStatus != _lastVMonStatus)
         {
             print(summary);
