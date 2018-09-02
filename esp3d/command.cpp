@@ -1087,6 +1087,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
                 BRIDGE::print((const char *)CONFIG::intTostr(DEFAULT_MIN_VMON_ALARM_THRESHOLD), output);
                 BRIDGE::print(F("\"}"), output);
             }
+            delay(0);
         }
         //end EEPROM
         BRIDGE::println(F("],\n"), output);
@@ -1282,7 +1283,7 @@ bool COMMAND::execute_command(int cmd,String cmd_params, tpipe output, level_aut
             response = false;
         }
         break;
-    // Turn printer UART-port on or off
+    //Turn printer UART-port on or off
     //[ESP452][<on/off>]
     case 452:
         if (Board::pPrinterPortSwitch != NULL) {
