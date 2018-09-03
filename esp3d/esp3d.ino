@@ -107,7 +107,7 @@ void setup()
     //WiFi.disconnect();
     WiFi.mode(WIFI_OFF);
 
-    // Show displahy test pattern for 1.25 seconds and wait remaining part of BRD_POWERON_DELAY
+    // Show display test pattern for 1.25 seconds and wait remaining part of BRD_POWERON_DELAY
     {
         const int patternDisplayTime = 1250;
         delay(std::min(BRD_POWERON_DELAY, patternDisplayTime));
