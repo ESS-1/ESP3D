@@ -951,6 +951,29 @@ String CONFIG::formatBytes(uint32_t bytes)
     }
 }
 
+String CONFIG::formatFlashMode(FlashMode_t mode)
+{
+    switch (mode)
+    {
+        case FM_QIO:
+            return F("QIO");
+        case FM_QOUT:
+            return F("QOUT");
+        case FM_DIO:
+            return F("DIO");
+        case FM_DOUT:
+            return F("DOUT");
+#ifdef ARDUINO_ARCH_ESP32
+        case FM_FAST_READ:
+            return F("FAST_READ");
+        case FM_SLOW_READ:
+            return F("SLOW_READ");
+#endif
+        default:
+            return F("Unknown");
+    }
+}
+
 //helper to convert string to IP
 //do not use IPAddress.fromString() because lack of check point and error result
 //return number of parts
@@ -1339,7 +1362,7 @@ bool CONFIG::reset_config()
 }
 
 void CONFIG::print_config(tpipe output, bool plaintext)
-{    
+{
     if (!plaintext)BRIDGE::print(F("{\"chip_id\":\""), output);
     else BRIDGE::print(F("Chip ID: "), output);
 #ifdef ARDUINO_ARCH_ESP8266
@@ -1349,7 +1372,27 @@ void CONFIG::print_config(tpipe output, bool plaintext)
 #endif
     if (!plaintext)BRIDGE::print(F("\","), output);
     else BRIDGE::print(F("\n"), output);
-    
+
+#ifdef ARDUINO_ARCH_ESP8266
+    if (!plaintext)BRIDGE::print(F("{\"flash_id\":\""), output);
+    else BRIDGE::print(F("SPI Flash ID: "), output);
+    BRIDGE::print(String(ESP.getFlashChipId(), HEX) +
+                  F(" (") +
+                  formatBytes(ESP.getFlashChipRealSize()) +
+                  F(")"), output);
+    if (!plaintext)BRIDGE::print(F("\","), output);
+    else BRIDGE::print(F("\n"), output);
+#endif
+
+    if (!plaintext)BRIDGE::print(F("{\"flash_mode\":\""), output);
+    else BRIDGE::print(F("SPI Flash Mode: "), output);
+    BRIDGE::print(formatFlashMode(ESP.getFlashChipMode()) +
+                  F(" (") +
+                  String(ESP.getFlashChipSpeed()/1000000) +
+                  F(" MHz)"), output);
+    if (!plaintext)BRIDGE::print(F("\","), output);
+    else BRIDGE::print(F("\n"), output);
+
     if (!plaintext)BRIDGE::print(F("\"cpu\":\""), output);
     else BRIDGE::print(F("CPU Frequency: "), output);
     BRIDGE::print(String(ESP.getCpuFreqMHz()).c_str(), output);

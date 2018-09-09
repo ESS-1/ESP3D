@@ -452,6 +452,7 @@ public:
     static bool isIPValid(const char * IP);
     static char * intTostr(int value);
     static String formatBytes(uint32_t bytes);
+    static String formatFlashMode(FlashMode_t mode);
     static char * mac2str(uint8_t mac [WL_MAC_ADDR_LENGTH]);
     static byte split_ip (const char * ptr,byte * part);
     static void esp_restart();
