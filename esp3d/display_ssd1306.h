@@ -22,12 +22,12 @@
 #define SSD1306_LINES            (5)
 #define SSD1306_CHARS_PER_LINE   (36)    // includes NULL
 
-#define SSD1306_BRIGHTNESS_HIGH  (0xF0)
-#define SSD1306_BRIGHTNESS_LOW   (0x00)
+#define SSD1306_BRIGHTNESS_HIGH  (0xE0)
+#define SSD1306_BRIGHTNESS_LOW   (0x01)
 #define SSD1306_DIMMING_DELAY    (10000) // ms
 #define SSD1306_DIMMING_SLOWDOWN (35)    // ms per brightness unit
 
-#define SSD1306_PRECHARGE        (0x11)
+#define SSD1306_PRECHARGE        (0x48)
 #define SSD1306_COM_DESELECT     (0x20)
 
 class DisplaySSD1306 : public Display
