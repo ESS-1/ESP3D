@@ -1374,7 +1374,7 @@ void CONFIG::print_config(tpipe output, bool plaintext)
     else BRIDGE::print(F("\n"), output);
 
 #ifdef ARDUINO_ARCH_ESP8266
-    if (!plaintext)BRIDGE::print(F("{\"flash_id\":\""), output);
+    if (!plaintext)BRIDGE::print(F("\"flash_id\":\""), output);
     else BRIDGE::print(F("SPI Flash ID: "), output);
     BRIDGE::print(String(ESP.getFlashChipId(), HEX) +
                   F(" (") +
@@ -1384,7 +1384,7 @@ void CONFIG::print_config(tpipe output, bool plaintext)
     else BRIDGE::print(F("\n"), output);
 #endif
 
-    if (!plaintext)BRIDGE::print(F("{\"flash_mode\":\""), output);
+    if (!plaintext)BRIDGE::print(F("\"flash_mode\":\""), output);
     else BRIDGE::print(F("SPI Flash Mode: "), output);
     BRIDGE::print(formatFlashMode(ESP.getFlashChipMode()) +
                   F(" (") +
@@ -1426,9 +1426,10 @@ void CONFIG::print_config(tpipe output, bool plaintext)
     BRIDGE::print(formatBytes(ESP.getFlashChipSize()).c_str(), output);
     if (!plaintext)BRIDGE::print(F("\","), output);
     else BRIDGE::print(F("\n"), output);
-#ifdef ARDUINO_ARCH_ESP8266 
+
     if (!plaintext)BRIDGE::print(F("\"update_size\":\""), output);
     else BRIDGE::print(F("Available Size for OTA update: "), output);
+#ifdef ARDUINO_ARCH_ESP8266 
     uint32_t freeProgramFlash = ESP.getFreeSketchSpace();
     // OTA uses free portion of the program memory. Coonsidering that the maximum size
     // of ESP8266 executable code is 1 MB, free space for OTA is also limited by 1 MB
@@ -1436,37 +1437,34 @@ void CONFIG::print_config(tpipe output, bool plaintext)
     BRIDGE::print(formatBytes(freeProgramFlash).c_str(), output);
     if (!plaintext)BRIDGE::print(F("\","), output);
     else {
-            if (freeProgramFlash >= ESP.getSketchSize()) BRIDGE::println(F("(Ok)"), output);
-            else BRIDGE::println(F("(Not enough)"), output);
-        }
-
-    if (!plaintext)BRIDGE::print(F("\"spiffs_size\":\""), output);
-    else BRIDGE::print(F("Available Size for SPIFFS: "), output);
-   
-    fs::FSInfo info;
-    SPIFFS.info(info);
-    BRIDGE::print(formatBytes(info.totalBytes).c_str(), output);
-    if (!plaintext)BRIDGE::print(F("\","), output);
-    else BRIDGE::print(F("\n"), output);
-#else 
-	if (!plaintext)BRIDGE::print(F("\"update_size\":\""), output);
-    else BRIDGE::print(F("Available Size for update: "), output);
+        if (freeProgramFlash >= ESP.getSketchSize()) BRIDGE::println(F("(Ok)"), output);
+        else BRIDGE::println(F("(Not enough)"), output);
+    }
+#else
     uint32_t  flashsize = ESP.getFlashChipSize();
-//Not OTA on 2Mb board per spec
+    //Not OTA on 2Mb board per spec
     if (flashsize > 0x20000) flashsize = 0x140000;
     else flashsize = 0x0;
     BRIDGE::print(formatBytes(flashsize).c_str(), output);
     if (!plaintext)BRIDGE::print(F("\","), output);
     else {
-        if (flashsize  > 0x0) BRIDGE::println(F("(Ok)"), output);
-        else BRIDGE::print(F("(Not enough)"), output);
-        }
+        if (flashsize > 0x0) BRIDGE::println(F("(Ok)"), output);
+        else BRIDGE::println(F("(Not enough)"), output);
+    }
+#endif
+
     if (!plaintext)BRIDGE::print(F("\"spiffs_size\":\""), output);
     else BRIDGE::print(F("Available Size for SPIFFS: "), output);
+#ifdef ARDUINO_ARCH_ESP8266 
+    fs::FSInfo info;
+    SPIFFS.info(info);
+    BRIDGE::print(formatBytes(info.totalBytes).c_str(), output);
+#else 
     BRIDGE::print(formatBytes(SPIFFS.totalBytes()).c_str(), output);
+#endif
     if (!plaintext)BRIDGE::print(F("\","), output);
     else BRIDGE::print(F("\n"), output);
-#endif
+
     if (!plaintext)BRIDGE::print(F("\"baud_rate\":\""), output);
     else BRIDGE::print(F("Baud rate: "), output);
     uint32_t br = Board::printerPort.baudRate();
@@ -1874,7 +1872,7 @@ void CONFIG::print_config(tpipe output, bool plaintext)
     if (!plaintext)BRIDGE::print(F("\","), output);
     else BRIDGE::print(F("\n"), output);
 
-    if (!plaintext)BRIDGE::print(F("\"settings reset button\":\""), output);
+    if (!plaintext)BRIDGE::print(F("\"settings_reset_button\":\""), output);
     else BRIDGE::print(F("Settings reset button: "), output);
     BRIDGE::print(Board::pResetButton != NULL
         ? F("Enabled")
@@ -1882,7 +1880,7 @@ void CONFIG::print_config(tpipe output, bool plaintext)
     if (!plaintext)BRIDGE::print(F("\","), output);
     else BRIDGE::print(F("\n"), output);
 
-    if (!plaintext)BRIDGE::print(F("\"printer reset output\":\""), output);
+    if (!plaintext)BRIDGE::print(F("\"printer_reset_output\":\""), output);
     else BRIDGE::print(F("Printer reset output: "), output);
     BRIDGE::print(Board::pPrinterReset != NULL
         ? F("Enabled")
@@ -1890,7 +1888,7 @@ void CONFIG::print_config(tpipe output, bool plaintext)
     if (!plaintext)BRIDGE::print(F("\","), output);
     else BRIDGE::print(F("\n"), output);
 
-    if (!plaintext)BRIDGE::print(F("\"voltage monitor\":\""), output);
+    if (!plaintext)BRIDGE::print(F("\"voltage_monitor\":\""), output);
     else BRIDGE::print(F("Voltage monitor: "), output);
     if (Board::pVoltageMonitor != NULL)
     {
@@ -1912,7 +1910,7 @@ void CONFIG::print_config(tpipe output, bool plaintext)
     if (!plaintext)BRIDGE::print(F("\","), output);
     else BRIDGE::print(F("\n"), output);
 
-    if (!plaintext)BRIDGE::print(F("\"UART switch\":\""), output);
+    if (!plaintext)BRIDGE::print(F("\"uart_switch\":\""), output);
     else BRIDGE::print(F("UART switch: "), output);
     BRIDGE::print(Board::pPrinterPortSwitch != NULL
         ? F("Enabled")
@@ -1920,7 +1918,7 @@ void CONFIG::print_config(tpipe output, bool plaintext)
     if (!plaintext)BRIDGE::print(F("\","), output);
     else BRIDGE::print(F("\n"), output);
 
-    if (!plaintext)BRIDGE::print(F("\"status LED\":\""), output);
+    if (!plaintext)BRIDGE::print(F("\"status_led\":\""), output);
     else BRIDGE::print(F("Status LED: "), output);
 #if defined(PIN_OUT_LED_R) || defined(PIN_OUT_LED_G) || defined(PIN_OUT_LED_B)
     BRIDGE::print(F(
